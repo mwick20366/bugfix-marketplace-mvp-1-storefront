@@ -96,7 +96,7 @@ const AccountNav = ({
                   >
                     <div className="flex items-center gap-x-2">
                       <ArrowRightOnRectangle />
-                      <span>Log out</span>
+                      <span>Log out!</span>
                     </div>
                     <ChevronDown className="transform -rotate-90" />
                   </button>
@@ -115,16 +115,25 @@ const AccountNav = ({
             <ul className="flex mb-0 justify-start items-start flex-col gap-y-4">
               <li>
                 <AccountNavLink
-                  href="/account"
+                  href="/developer/account/my-bugs"
                   route={route!}
                   data-testid="overview-link"
                 >
-                  Overview
+                  My Bugs
                 </AccountNavLink>
               </li>
               <li>
                 <AccountNavLink
-                  href="/account/profile"
+                  href="/developer/account/my-submissions"
+                  route={route!}
+                  data-testid="submissions-link"
+                >
+                  My Submissions
+                </AccountNavLink>
+              </li>
+              <li>
+                <AccountNavLink
+                  href="/developer/account/profile"
                   route={route!}
                   data-testid="profile-link"
                 >
@@ -133,20 +142,11 @@ const AccountNav = ({
               </li>
               <li>
                 <AccountNavLink
-                  href="/account/addresses"
+                  href="/developer/account/addresses"
                   route={route!}
                   data-testid="addresses-link"
                 >
                   Addresses
-                </AccountNavLink>
-              </li>
-              <li>
-                <AccountNavLink
-                  href="/account/orders"
-                  route={route!}
-                  data-testid="orders-link"
-                >
-                  Orders
                 </AccountNavLink>
               </li>
               <li className="text-grey-700">

@@ -18,8 +18,10 @@ import { Developer } from "./developer"
 import { cli } from "webpack"
 import { SortOptions } from "@modules/marketplace/components/refinement-list/sort-bugs"
 import { sortBugs } from "@lib/util/sort-bugs"
+import { Client } from "./client"
 
 export type Bug = {
+    original: Bug
     id: string,
     title: string,
     description: string,
@@ -27,9 +29,10 @@ export type Bug = {
     repoLink: string,
     bounty: number,
     status: string,
-    createdAt: string,
-    updatedAt: string,
+    created_at: string,
+    updated_at: string,
     developer?: Developer
+    client?: Client
 }
 
 export const retrieveBug =
@@ -60,59 +63,15 @@ export const retrieveBug =
       .catch(() => null)    
   }
 
-// export const listBugs =
-//   async (
-//     limit: number = 10,
-//     offset: number = 0,
-//     filters?: Record<string, any>
-//   ): Promise<Bug[]> => {
-//     const authHeaders = await getAuthHeaders()
-
-//     if (!authHeaders) return []
-
-//     const headers = {
-//       ...authHeaders,
-//     }
-
-//     const next = {
-//       ...(await getCacheOptions("bugs")),
-//     }
-
-//     return sdk.client
-//       .fetch<{ bugs: Bug[] }>(`/bugs`, {
-//         method: "GET",
-//         query: {
-//           limit,
-//           offset,
-//           order: "-created_at",
-//           // fields: "*items,+items.metadata,*items.variant,*items.product",
-//           ...filters,
-//         },
-//         headers,
-//         next,
-//         cache: "force-cache",
-//       })
-//       .then(({ bugs }) => bugs)
-//       .catch(() => [])
-//   }
-
 export const listBugs = async ({
-  pageParam = 1,
   queryParams,
 }: {
-  pageParam?: number
   queryParams?: HttpTypes.FindParams & { q?: string, status?: string }
+  sortBy?: SortOptions
 }): Promise<{
   response: { bugs: Bug[]; count: number }
-  nextPage: number | null
   queryParams?: HttpTypes.FindParams & { q?: string, status?: string }
 }> => {
-  const limit = queryParams?.limit || 12
-  const _pageParam = Math.max(pageParam, 1)
-  const offset = _pageParam === 1 ? 0 : (_pageParam - 1) * limit
-
-  let region: HttpTypes.StoreRegion | undefined | null
-
   const headers = {
     ...(await getAuthHeaders()),
   }
@@ -127,10 +86,6 @@ export const listBugs = async ({
       {
         method: "GET",
         query: {
-          limit,
-          offset,
-          // fields:
-          //   "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags,",
           ...queryParams,
         },
         headers,
@@ -139,60 +94,55 @@ export const listBugs = async ({
       }
     )
     .then(({ bugs, count }) => {
-      const nextPage = count > offset + limit ? pageParam + 1 : null
-
       return {
         response: {
           bugs,
           count,
         },
-        nextPage: nextPage,
         queryParams,
       }
     })
 }
 
-export const listBugsWithSort = async ({
-  page = 0,
+export const listDeveloperBugs = async ({
   queryParams,
-  sortBy = "created_at",
 }: {
-  page?: number
   queryParams?: HttpTypes.FindParams & { q?: string, status?: string }
   sortBy?: SortOptions
 }): Promise<{
   response: { bugs: Bug[]; count: number }
-  nextPage: number | null
   queryParams?: HttpTypes.FindParams & { q?: string, status?: string }
 }> => {
-  const limit = queryParams?.limit || 12
-
-  const {
-    response: { bugs, count },
-  } = await listBugs({
-    pageParam: 0,
-    queryParams: {
-      ...queryParams,
-      limit: 100,
-    },
-  })
-
-  const sortedBugs = sortBugs(bugs, sortBy)
-
-  const pageParam = (page - 1) * limit
-
-  const nextPage = count > pageParam + limit ? pageParam + limit : null
-
-  const paginatedBugs = sortedBugs.slice(pageParam, pageParam + limit)
-
-  return {
-    response: {
-      bugs: paginatedBugs,
-      count,
-    },
-    nextPage,
-    queryParams,
+  const headers = {
+    ...(await getAuthHeaders()),
   }
+
+  const next = {
+    ...(await getCacheOptions("bugs")),
+  }
+
+  return sdk.client
+    .fetch<{ bugs: Bug[]; count: number }>(
+      `/bugs`,
+      {
+        method: "GET",
+        query: {
+          ...queryParams,
+        },
+        headers,
+        next,
+        cache: "force-cache",
+      }
+    )
+    .then(({ bugs, count }) => {
+      return {
+        response: {
+          bugs,
+          count,
+        },
+        queryParams,
+      }
+    })
 }
 
 export const retrieveClientBugs =
@@ -212,9 +162,6 @@ export const retrieveClientBugs =
     return await sdk.client
       .fetch<{ bugs: Bug[] }>(`/bugs/clients/${clientId}`, {
         method: "GET",
-        // query: {
-        //   fields: "*orders",
-        // },
         headers,
         next,
         cache: "force-cache",
@@ -240,9 +187,6 @@ export const retrieveDeveloperBugs =
     return await sdk.client
       .fetch<{ bugs: Bug[] }>(`/bugs/developer/${developerId}`, {
         method: "GET",
-        // query: {
-        //   fields: "*orders",
-        // },
         headers,
         next,
         cache: "force-cache",
@@ -310,6 +254,31 @@ export const updateClientBug = async (
     body: bug,
     headers,
     })
+    .then(async () => {
+      const cacheTag = await getCacheTag("bugs")
+      revalidateTag(cacheTag)
+      return { success: true, error: null }
+    })
+    .catch((err) => {
+      return { success: false, error: err.toString() }
+    })
+}
+
+export const claimBug = async (
+  bugId: string,
+  // developerId: string,
+): Promise<any> => {
+  // const bugId = formData.get("bugId") as string
+  // const developerId = formData.get("developerId") as string
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  return await sdk.client.fetch(`/bugs/${bugId}/claim`, {
+    method: "POST",
+    // body: { developer_id: developerId },
+    headers,
+  })
     .then(async () => {
       const cacheTag = await getCacheTag("bugs")
       revalidateTag(cacheTag)

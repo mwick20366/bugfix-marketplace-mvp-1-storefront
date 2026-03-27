@@ -4,7 +4,7 @@ import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-g
 import RefinementList from "@modules/marketplace/components/refinement-list"
 import { SortOptions } from "@modules/marketplace/components/refinement-list/sort-bugs"
 
-import PaginatedBugs from "./paginated-bugs"
+import PaginatedBugs from "../components/open-bugs"
 
 const MarketplaceTemplate = ({
   sortBy,
@@ -29,10 +29,10 @@ const MarketplaceTemplate = ({
           <h1 data-testid="store-page-title">All bugs</h1>
         </div>
         <Suspense fallback={<SkeletonProductGrid />}>
-          <PaginatedBugs
+          {/* <PaginatedBugs
             sortBy={sort}
             page={pageNumber}
-          />
+          /> */}
         </Suspense>
       </div>
     </div>

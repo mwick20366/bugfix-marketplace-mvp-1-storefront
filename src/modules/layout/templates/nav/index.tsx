@@ -7,6 +7,9 @@ import { StoreRegion } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
 import SideMenu from "@modules/layout/components/side-menu"
+import { useLocation } from "react-router-dom"
+import { retrieveClient } from "@lib/data/client"
+import { retrieveDeveloper } from "@lib/data/developer"
 
 export default async function Nav() {
   const [regions, locales, currentLocale] = await Promise.all([
@@ -14,6 +17,18 @@ export default async function Nav() {
     listLocales(),
     getLocale(),
   ])
+
+  const developer = await retrieveDeveloper().catch(() => null)
+  const client = await retrieveClient().catch(() => null)
+
+  const isLoggedIn = Boolean(developer || client)
+  const isDeveloper = Boolean(developer)
+
+  let marketplaceLink = "/marketplace/bugs";
+
+  if (isDeveloper) {
+    marketplaceLink = "/developer/account/bug-marketplace";
+  }
 
   return (
     <div className="sticky top-0 inset-x-0 z-50 group">
@@ -36,28 +51,32 @@ export default async function Nav() {
           </div>
 
           <div className="flex items-center gap-x-6 h-full flex-1 basis-0 justify-end">
+            {!isLoggedIn && (
+              <>
+                <div className="hidden small:flex items-center gap-x-6 h-full">
+                  <LocalizedClientLink
+                    className="hover:text-ui-fg-base"
+                    href="/client/account"
+                    data-testid="nav-account-link"
+                  >
+                    For Clients
+                  </LocalizedClientLink>
+                </div>
+                <div className="hidden small:flex items-center gap-x-6 h-full">
+                  <LocalizedClientLink
+                    className="hover:text-ui-fg-base"
+                    href="/developer/account"
+                    data-testid="nav-account-link"
+                  >
+                    For Developers
+                  </LocalizedClientLink>
+                </div>
+              </>
+            )}
             <div className="hidden small:flex items-center gap-x-6 h-full">
               <LocalizedClientLink
                 className="hover:text-ui-fg-base"
-                href="/client/account"
-                data-testid="nav-account-link"
-              >
-                For Clients
-              </LocalizedClientLink>
-            </div>
-            <div className="hidden small:flex items-center gap-x-6 h-full">
-              <LocalizedClientLink
-                className="hover:text-ui-fg-base"
-                href="/developer/account"
-                data-testid="nav-account-link"
-              >
-                For Developers
-              </LocalizedClientLink>
-            </div>    
-            <div className="hidden small:flex items-center gap-x-6 h-full">
-              <LocalizedClientLink
-                className="hover:text-ui-fg-base"
-                href="/marketplace/bugs"
+                href={marketplaceLink}
                 data-testid="nav-account-link"
               >
                 Marketplace

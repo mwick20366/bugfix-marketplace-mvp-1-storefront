@@ -104,6 +104,7 @@ export async function signupClient(_currentState: unknown, formData: FormData) {
     })
 
     await setAuthToken(loginToken as string)
+    sdk.client.setToken(loginToken as string)
 
     const customerCacheTag = await getCacheTag("customers")
     revalidateTag(customerCacheTag)
@@ -123,6 +124,8 @@ export async function loginClient(_currentState: unknown, formData: FormData) {
       .login("client", "emailpass", { email, password })
       .then(async (token) => {
         await setAuthToken(token as string)
+        sdk.client.setToken(token as string)
+
         const customerCacheTag = await getCacheTag("clients")
         revalidateTag(customerCacheTag)
       })
@@ -141,10 +144,10 @@ export async function signoutClient(countryCode: string) {
 
   await removeCartId()
 
-  const cartCacheTag = await getCacheTag("carts")
+  const cartCacheTag = await getCacheTag("clients")
   revalidateTag(cartCacheTag)
 
-  redirect(`/${countryCode}/account`)
+  redirect(`/${countryCode}/client/account`)
 }
 
 // export async function transferCart() {

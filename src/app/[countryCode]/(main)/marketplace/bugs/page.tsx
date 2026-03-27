@@ -2,7 +2,7 @@
 // import OpenBugs from "@modules/bugs/components/open-bugs"
 // import Hero from "@modules/home/components/hero"
 import { SortOptions } from "@modules/marketplace/components/refinement-list/sort-bugs"
-import PaginatedBugs from "@modules/marketplace/templates/paginated-bugs"
+import PaginatedBugs from "@modules/marketplace/components/open-bugs"
 
 // export const metadata: Metadata = {
 //   title: "Medusa Next.js Starter Template",
@@ -37,7 +37,7 @@ export default async function MarketplaceBugs(props: Params) {
       {/* <Hero /> */}
       <div className="py-12">
         <div className="content-container" data-testid="cart-container">
-          <PaginatedBugs sortBy={sort} status="open" page={pageNumber} q={q} />
+          {/* <PaginatedBugs sortBy={sort} status="open" page={pageNumber} q={q} /> */}
         </div>
       </div>
     </>

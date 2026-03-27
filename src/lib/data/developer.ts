@@ -22,10 +22,6 @@ export type Developer = Member & {
 
 export const retrieveDeveloper =
   async (): Promise<Developer | null> => {
-    debugger;
-
-    console.log("retrieveDeveloper called")
-
     const authHeaders = await getAuthHeaders()
 
     if (!authHeaders) return null
@@ -41,9 +37,6 @@ export const retrieveDeveloper =
     return await sdk.client
       .fetch<{ developer: Developer }>(`/developers/me`, {
         method: "GET",
-        // query: {
-        //   fields: "*orders",
-        // },
         headers,
         next,
         cache: "force-cache",
@@ -51,22 +44,6 @@ export const retrieveDeveloper =
       .then(({ developer }) => developer)
       .catch(() => null)
   }
-
-// export const updateMember = async (body: HttpTypes.StoreUpdateCustomer) => {
-//   const headers = {
-//     ...(await getAuthHeaders()),
-//   }
-
-//   const updateRes = await sdk.store.customer
-//     .update(body, {}, headers)
-//     .then(({ customer }) => customer)
-//     .catch(medusaError)
-
-//   const cacheTag = await getCacheTag("customers")
-//   revalidateTag(cacheTag)
-
-//   return updateRes
-// }
 
 export async function signupDeveloper(_currentState: unknown, formData: FormData) {
   const password = formData.get("password") as string
@@ -105,8 +82,6 @@ export async function signupDeveloper(_currentState: unknown, formData: FormData
     const developerCacheTag = await getCacheTag("developers")
     revalidateTag(developerCacheTag)
 
-    // await transferCart()
-
     return createdDeveloper
   } catch (error: any) {
     return error.toString()
@@ -128,12 +103,6 @@ export async function loginDeveloper(_currentState: unknown, formData: FormData)
   } catch (error: any) {
     return error.toString()
   }
-
-  // try {
-  //   await transferCart()
-  // } catch (error: any) {
-  //   return error.toString()
-  // }
 }
 
 export async function signoutDeveloper(countryCode: string) {
@@ -149,7 +118,7 @@ export async function signoutDeveloper(countryCode: string) {
   // const cartCacheTag = await getCacheTag("carts")
   // revalidateTag(cartCacheTag)
 
-  redirect(`/${countryCode}/account`)
+  redirect(`/${countryCode}/developer/account`)
 }
 
 // export async function transferCart() {

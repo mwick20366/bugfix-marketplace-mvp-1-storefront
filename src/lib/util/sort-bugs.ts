@@ -23,7 +23,7 @@ export function sortBugs(
   if (sortBy === "created_at") {
     sortedBugs.sort((a, b) => {
       return (
-        new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+        new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime()
       )
     })
   }

@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
 
-import ClientBugs from "@modules/bugs/components/client-bugs"
+import MyBugs from "@modules/client/components/my-bugs"
 
 import { getRegion } from "@lib/data/regions"
 import { retrieveClient } from "@lib/data/client"
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   description: "View your bugs, update their status, or add new bugs to your account.",
 }
 
-export default async function MyBugs(props: {
+export default async function Page(props: {
   params: Promise<{ countryCode: string }>
 }) {
   const params = await props.params
@@ -30,7 +30,7 @@ export default async function MyBugs(props: {
           View, update, or add new bugs. You can manage your bugs and track their status here.
         </p>
       </div>
-      <ClientBugs client={client} />
+      <MyBugs client={client} />
     </div>
   )
 }

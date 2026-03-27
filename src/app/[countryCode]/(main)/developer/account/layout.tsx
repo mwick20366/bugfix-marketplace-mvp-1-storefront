@@ -11,8 +11,6 @@ export default async function AccountPageLayout({
 }) {
   const developer = await retrieveDeveloper().catch(() => null)
 
-  console.log("Developer in layout:", developer)
-
   return (
     <AccountLayout developer={developer}>
       {developer ? dashboard : login}
