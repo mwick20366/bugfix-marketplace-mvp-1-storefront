@@ -94,6 +94,7 @@ export const listBugs = async ({
       }
     )
     .then(({ bugs, count }) => {
+      console.log("Fetched bugs:", bugs)
       return {
         response: {
           bugs,
@@ -280,8 +281,50 @@ export const claimBug = async (
     headers,
   })
     .then(async () => {
-      const cacheTag = await getCacheTag("bugs")
-      revalidateTag(cacheTag)
+      const bugsCacheTag = await getCacheTag("bugs")
+      revalidateTag(bugsCacheTag)
+
+      const developerCacheTag = await getCacheTag("developers")
+      revalidateTag(developerCacheTag)
+
+      return { success: true, error: null }
+    })
+    .catch((err) => {
+      return { success: false, error: err.toString() }
+    })
+}
+
+export const submitFix = async (
+  notes: string,
+  fileUrl: string,
+  bugId: string,
+): Promise<any> => {
+  // const bugId = formData.get("bugId") as string
+
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  return await sdk.client.fetch(`/bugs/${bugId}/submit-fix`, {
+    method: "POST",
+    body: {
+      submission: {
+        notes,
+        fileUrl,
+      },
+    },
+    headers,
+  })
+    .then(async () => {
+      const bugCacheTag = await getCacheTag("bugs")
+      revalidateTag(bugCacheTag)
+
+      const submissionCacheTag = await getCacheTag("submissions")
+      revalidateTag(submissionCacheTag)
+      
+      const developerCacheTag = await getCacheTag("developers")
+      revalidateTag(developerCacheTag)
+
       return { success: true, error: null }
     })
     .catch((err) => {

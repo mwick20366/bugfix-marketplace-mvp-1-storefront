@@ -1,8 +1,6 @@
 "use client";
 
 import { Submission } from "@lib/data/submissions";
-import { useClaimBug } from "@lib/hooks/use-claim-bug";
-import { toast } from "@medusajs/ui";
 import { useEffect, useRef } from "react";
 
 interface SubmissionDetailsModalProps {
@@ -20,20 +18,6 @@ export default function SubmissionDetailsModal({
   // submissionTitle = "this submission" 
 }: SubmissionDetailsModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-
-  // const { mutate: claimBug, isPending } = useClaimBug(submission?.id)
-
-  // const handleClaim = () => {
-  //   claimBug(undefined, {
-  //     onSuccess: () => {
-  //       toast.success("Submission claimed successfully")
-  //       onClose()
-  //     },
-  //     onError: (error) => {
-  //       toast.error(`Failed to claim submission: ${error.message}`)
-  //     },
-  //   })
-  // }
 
   // Sync the native dialog state with the isOpen prop
   useEffect(() => {

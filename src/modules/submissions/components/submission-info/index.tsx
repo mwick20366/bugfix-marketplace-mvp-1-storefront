@@ -5,35 +5,32 @@ import { useEffect } from "react"
 import useToggleState from "@lib/hooks/use-toggle-state"
 import { useFormStatus } from "react-dom"
 
-type BugInfoProps = {
+type SubmissionInfoProps = {
   label: string
   // currentInfo: string | React.ReactNode
   isSuccess?: boolean
   isError?: boolean
   errorMessage?: string
   clearState: () => void
+  onCancel?: () => void
   children?: React.ReactNode
   'data-testid'?: string
 }
 
-const BugInfo = ({
+const SubmissionInfo = ({
   label,
   // currentInfo,
   isSuccess,
   isError,
   clearState,
+  onCancel,
   errorMessage = "An error occurred, please try again",
   children,
   'data-testid': dataTestid
-}: BugInfoProps) => {
+}: SubmissionInfoProps) => {
   const { state, close, toggle } = useToggleState()
 
   const { pending } = useFormStatus()
-
-  // const handleToggle = () => {
-  //   clearState()
-  //   setTimeout(() => toggle(), 100)
-  // }
 
   useEffect(() => {
     if (isSuccess) {
@@ -46,26 +43,7 @@ const BugInfo = ({
       <div className="flex items-end justify-between">
         <div className="flex flex-col">
           <span className="uppercase text-ui-fg-base">{label}</span>
-          {/* <div className="flex items-center flex-1 basis-0 justify-end gap-x-4">
-            {typeof currentInfo === "string" ? (
-              <span className="font-semibold" data-testid="current-info">{currentInfo}</span>
-            ) : (
-              currentInfo
-            )}
-          </div> */}
         </div>
-        {/* <div>
-          <Button
-            variant="secondary"
-            className="w-[100px] min-h-[25px] py-1"
-            onClick={handleToggle}
-            type={state ? "reset" : "button"}
-            data-testid="edit-button"
-            data-active={state}
-          >
-            {state ? "Cancel" : "Create"}
-          </Button>
-        </div> */}
       </div>
 
       {/* Success state */}
@@ -105,35 +83,30 @@ const BugInfo = ({
           </Badge>
         </Disclosure.Panel>
       </Disclosure>
-
-      {/* <Disclosure>
-        <Disclosure.Panel
-          static
-          className={clx(
-            "transition-[max-height,opacity] duration-300 ease-in-out overflow-visible",
-            {
-              "max-h-[1000px] opacity-100": state,
-              "max-h-0 opacity-0": !state,
-            }
-          )}
-        > */}
-          <div className="flex flex-col gap-y-2 py-4">
-            <div>{children}</div>
-            <div className="flex items-center justify-end mt-2">
-              <Button
-                isLoading={pending}
-                className="w-full small:max-w-[140px]"
-                type="submit"
-                data-testid="save-button"
-              >
-                Save changes
-              </Button>
-            </div>
+        <div className="flex flex-col gap-y-2 py-4">
+          <div>{children}</div>
+          <div className="flex items-center justify-end mt-2">
+            <Button
+              variant="secondary"
+              className="w-full small:max-w-[140px]"
+              type="button"
+              onClick={onCancel}
+              data-testid="cancel-button"
+            >
+              Cancel
+            </Button>            
+            <Button
+              isLoading={pending}
+              className="w-full small:max-w-[140px]"
+              type="submit"
+              data-testid="save-button"
+            >
+              Submit Fix
+            </Button>
           </div>
-        {/* </Disclosure.Panel>
-      </Disclosure> */}
+        </div>
     </div>
   )
 }
 
-export default BugInfo
+export default SubmissionInfo

@@ -1,12 +1,10 @@
 "use client"
-import { Bug, claimBug, listBugs } from "@lib/data/bugs"
-import { Developer } from "@lib/data/developer"
-import { useClaimBug } from "@lib/hooks/use-claim-bug"
-import { DataTablePaginationState, DataTableSortingState, toast } from "@medusajs/ui"
+import { Bug, listBugs } from "@lib/data/bugs"
+import { DataTablePaginationState, DataTableSortingState } from "@medusajs/ui"
 import ClaimBugModal from "@modules/developer/components/claim-bug-modal"
 import BugsListTemplate from "@modules/bugs/components/list-template"
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 
 const BUG_LIMIT = 15
 
@@ -85,14 +83,6 @@ export default function OpenBugs(props: BugsProps) {
 
   const { data, isLoading } = useQuery<{ bugs: Bug[]; count: number }, Error>({
     queryFn: async () => {
-      console.log('Fetching bugs with params:', {
-        limit,
-        offset,
-        search,
-        sorting,
-        developer_id,
-        client_id
-      })
       const result = await listBugs({
         queryParams: {
           limit,
@@ -106,15 +96,8 @@ export default function OpenBugs(props: BugsProps) {
       return result.response
     },
     queryKey,
-    // staleTime: 0,
     placeholderData: keepPreviousData,
-    // enabled: false, // Disable automatic fetching on mount
   })
-
-  // useEffect(() => {
-  //   refetch()
-  //   // Fetch data when component mounts or dependencies change
-  // }, [])
 
   const handleRowClicked = (bug: Bug) => {
     setSelectedBug(bug)

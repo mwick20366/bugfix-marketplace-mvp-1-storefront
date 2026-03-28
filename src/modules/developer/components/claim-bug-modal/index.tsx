@@ -3,6 +3,7 @@
 import { Bug } from "@lib/data/bugs";
 import { useClaimBug } from "@lib/hooks/use-claim-bug";
 import { toast } from "@medusajs/ui";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 
 interface ClaimBugModalProps {
@@ -20,19 +21,23 @@ export default function ClaimBugModal({
   // bugTitle = "this bug" 
 }: ClaimBugModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const queryClient = useQueryClient()
 
-  const { mutate: claimBug, isPending } = useClaimBug(bug?.id)
-
-  const handleClaim = () => {
-    claimBug(undefined, {
+  const { mutate: claimBug } = useClaimBug(bug?.id, {
       onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["bugs"] })
+        queryClient.invalidateQueries({ queryKey: ["developer-me"] })
         toast.success("Bug claimed successfully")
         onClose()
       },
       onError: (error) => {
+        console.error("Failed to claim bug from claim bug modal:", error)
         toast.error(`Failed to claim bug: ${error.message}`)
-      },
-    })
+      },    
+  })
+
+  const handleClaim = () => {
+    claimBug(undefined);
   }
 
   // Sync the native dialog state with the isOpen prop

@@ -10,18 +10,17 @@ import MapPin from "@modules/common/icons/map-pin"
 import Package from "@modules/common/icons/package"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { Developer, signoutDeveloper } from "@lib/data/developer"
+import { useDeveloperMe } from "@lib/hooks/use-developer-me"
 
-const AccountNav = ({
-  developer,
-}: {
-  developer: Developer | null
-}) => {
+const AccountNav = () => {
   const route = usePathname()
   const { countryCode } = useParams() as { countryCode: string }
 
   const handleLogout = async () => {
     await signoutDeveloper(countryCode)
   }
+
+  const { developer } = useDeveloperMe()
 
   return (
     <div>
@@ -119,7 +118,7 @@ const AccountNav = ({
                   route={route!}
                   data-testid="overview-link"
                 >
-                  My Bugs
+                  My Bugs ({developer?.bugs?.length || 0})
                 </AccountNavLink>
               </li>
               <li>
@@ -128,7 +127,7 @@ const AccountNav = ({
                   route={route!}
                   data-testid="submissions-link"
                 >
-                  My Submissions
+                  My Submissions ({developer?.submissions?.length || 0})
                 </AccountNavLink>
               </li>
               <li>

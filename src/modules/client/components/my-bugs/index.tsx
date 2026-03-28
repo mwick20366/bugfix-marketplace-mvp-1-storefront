@@ -1,5 +1,5 @@
 "use client"
-import { Bug, claimBug, listBugs } from "@lib/data/bugs"
+import { Bug, listBugs } from "@lib/data/bugs"
 import { Client } from "@lib/data/client"
 import { convertToLocale } from "@lib/util/money"
 import {
@@ -7,11 +7,13 @@ import {
   DataTablePaginationState,
   DataTableSortingState,
   DataTableColumnDef,
+  toast,
 } from "@medusajs/ui"
 import BugsListTemplate from "@modules/bugs/components/list-template"
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import { useMemo, useState } from "react"
 import BugDetailsModal from "../bug-details-modal"
+import { useClaimBug } from "@lib/hooks/use-claim-bug"
 
 const columnHelper = createDataTableColumnHelper<Bug>()
 
@@ -171,13 +173,20 @@ export default function MyBugs(props: MyBugsProps) {
     setSelectedBug(null)
   }
 
+  const { mutate: claimBug } = useClaimBug(selectedBug?.id || "") 
+
   const handleClaimBug = async () => {
-    await claimBug(selectedBug!.id)
-
-    console.log('Claiming bug with ID:', selectedBug?.id);
-
-    setIsModalOpen(false)
-    setSelectedBug(null)
+    claimBug(undefined, {
+      onSuccess: () => {
+        toast.success("Bug claimed successfully")
+        
+        setIsModalOpen(false)
+        setSelectedBug(null)
+      },
+      onError: (error) => {
+        toast.error(`Failed to claim bug: ${error.message}`)
+      },
+    })
   }
 
   return (

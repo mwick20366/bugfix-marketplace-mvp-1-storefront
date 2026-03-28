@@ -21,15 +21,18 @@ export default function BugDetailsModal({
 }: BugDetailsModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
-  const { mutate: claimBug, isPending } = useClaimBug(bug?.id)
+  const { mutate: claimBug } = useClaimBug(bug?.id)
 
   const handleClaim = () => {
+    console.log("Attempting to claim bug with ID from modal:", bug?.id) 
     claimBug(undefined, {
       onSuccess: () => {
+        console.log("Bug claimed successfully from handleClaim function")
         toast.success("Bug claimed successfully")
         onClose()
       },
       onError: (error) => {
+        console.error("Failed to claim bug from handleClaim function:", error)
         toast.error(`Failed to claim bug: ${error.message}`)
       },
     })

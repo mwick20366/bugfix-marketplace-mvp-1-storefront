@@ -69,7 +69,7 @@ export default function MySubmissions(props: MySubmissionsProps) {
   }
 
   const queryKey = useMemo(() => {
-    return ["submissions", limit, offset, search, sorting?.id, sorting?.desc]
+    return ["my-submissions", limit, offset, search, sorting?.id, sorting?.desc]
   }, [offset, search, sorting?.id, sorting?.desc])
 
   const { data, isLoading, refetch } = useQuery({
@@ -101,17 +101,6 @@ export default function MySubmissions(props: MySubmissionsProps) {
     setIsModalOpen(false)
     setSelectedSubmission(null)
   }
-
-  // const handleClaimBug = async () => {
-  //   await claimBug(selectedSubmission!.id)
-
-  //   console.log('Claiming bug with ID:', selectedSubmission?.id);
-
-  //   setIsModalOpen(false)
-  //   setSelectedSubmission(null)
-
-  //   // refetch() // Refetch the list of bugs to reflect the claimed bug
-  // }
 
   return (
     <div className="w-full">

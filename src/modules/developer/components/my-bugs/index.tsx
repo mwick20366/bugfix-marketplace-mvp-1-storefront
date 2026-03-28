@@ -1,24 +1,18 @@
 "use client"
 import { Bug, claimBug, listBugs } from "@lib/data/bugs"
-import { retrieveClient } from "@lib/data/client"
-import { Developer, retrieveDeveloper } from "@lib/data/developer"
-import { useAuthActor } from "@lib/hooks/use-auth-actor"
+import { Developer } from "@lib/data/developer"
 import { convertToLocale } from "@lib/util/money"
 import {
-  DataTable,
   createDataTableColumnHelper,
-  useDataTable,
   DataTablePaginationState,
   DataTableSortingState,
-  Button,
   DataTableColumnDef,
 } from "@medusajs/ui"
-import ClaimBugModal from "@modules/developer/components/claim-bug-modal"
 import BugsListTemplate from "@modules/bugs/components/list-template"
-import { SortOptions } from "@modules/marketplace/components/refinement-list/sort-bugs"
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import BugDetailsModal from "@modules/developer/components/bug-details-modal"
+import { useDeveloperMe } from "@lib/hooks/use-developer-me"
 
 const columnHelper = createDataTableColumnHelper<Bug>()
 
@@ -110,18 +104,15 @@ const columns = [
 
 const BUG_LIMIT = 15
 
-type MyBugsProps = {
-  developer: Developer
-}
-export default function MyBugs(props: MyBugsProps) {
+export default function MyBugs() {
   const [selectedBug, setSelectedBug] = useState<Bug | null>(null)
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
 
-  const { developer } = props
+  const { developer } = useDeveloperMe()
 
   const queryParams = {
     limit: BUG_LIMIT,
-    developer_id: developer.id,
+    developer_id: developer?.id,
     // developerId: developer.id,
     // status: "claimed",
   }
@@ -153,7 +144,7 @@ export default function MyBugs(props: MyBugsProps) {
   }
 
   const queryKey = useMemo(() => {
-    return ["bugs", limit, offset, search, sorting?.id, sorting?.desc]
+    return ["my-bugs", limit, offset, search, sorting?.id, sorting?.desc]
   }, [offset, search, sorting?.id, sorting?.desc])
 
   const { data, isLoading, refetch } = useQuery({
@@ -171,10 +162,10 @@ export default function MyBugs(props: MyBugsProps) {
     // enabled: false, // Disable automatic fetching on mount
   })
 
-  useEffect(() => {
-    refetch()
-    // Fetch data when component mounts or dependencies change
-  }, [])
+  // useEffect(() => {
+  //   refetch()
+  //   // Fetch data when component mounts or dependencies change
+  // }, [])
 
   const handleRowClicked = (bug: Bug) => {
     setSelectedBug(bug)
@@ -184,17 +175,6 @@ export default function MyBugs(props: MyBugsProps) {
   const handleCloseModal = () => {
     setIsModalOpen(false)
     setSelectedBug(null)
-  }
-
-  const handleClaimBug = async () => {
-    await claimBug(selectedBug!.id)
-
-    console.log('Claiming bug with ID:', selectedBug?.id);
-
-    setIsModalOpen(false)
-    setSelectedBug(null)
-
-    // refetch() // Refetch the list of bugs to reflect the claimed bug
   }
 
   return (
@@ -215,12 +195,15 @@ export default function MyBugs(props: MyBugsProps) {
         search={search}
         setSearch={setSearch}
       />
-      <BugDetailsModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        onConfirm={handleClaimBug}
-        bug={selectedBug!}
-      />
+      {selectedBug && (
+        <BugDetailsModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onFixSubmitted={refetch}
+          // onConfirm={handleClaimBug}
+          bug={selectedBug}
+        />
+      )}
     </div>
   )
 }

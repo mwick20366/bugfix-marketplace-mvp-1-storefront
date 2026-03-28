@@ -1,129 +1,103 @@
 "use client";
 
 import { Bug } from "@lib/data/bugs";
-import { useClaimBug } from "@lib/hooks/use-claim-bug";
-import { toast } from "@medusajs/ui";
-import { useEffect, useRef } from "react";
+import {
+  Button,
+  FocusModal,
+  Heading,
+  Input,
+  Label,
+  Text,
+  Textarea,
+  toast
+} from "@medusajs/ui";
+import { useState } from "react";
+import { useSubmitFix } from "@lib/hooks/use-submit-fix";
 
 interface BugDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onFixSubmitted?: () => void;
   bug: Bug; // Optional: show which bug is being claimed
 }
 
 export default function BugDetailsModal({ 
   isOpen, 
   onClose, 
-  onConfirm,
   bug,
+  onFixSubmitted,
   // bugTitle = "this bug" 
 }: BugDetailsModalProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [notes, setNotes] = useState("")
+  const [fileUrl, setFileUrl] = useState("")
 
-  const { mutate: claimBug, isPending } = useClaimBug(bug?.id)
+  const { mutate: submitFix, isPending } = useSubmitFix(bug?.id)
 
-  const handleClaim = () => {
-    claimBug(undefined, {
+  const handleSubmit = () => {
+    submitFix({ notes, fileUrl }, {
       onSuccess: () => {
-        toast.success("Bug claimed successfully")
+        toast.success("Fix submitted successfully")
+        onFixSubmitted?.()
         onClose()
       },
       onError: (error) => {
-        toast.error(`Failed to claim bug: ${error.message}`)
+        toast.error(`Failed to submit fix: ${error.message}`)
       },
     })
   }
 
-  // Sync the native dialog state with the isOpen prop
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (isOpen) {
-      dialog?.showModal();
-    } else {
-      dialog?.close();
-    }
-  }, [isOpen]);
-
-  const handleConfirm = () => {
-    handleClaim();
-    onConfirm();
-    onClose(); // Close the modal after confirming
-  }
-
   return (
-    <dialog
-      ref={dialogRef}
-      onClose={onClose} // Handles 'Esc' key naturally
-      className="rounded-xl p-0 backdrop:bg-slate-900/50 backdrop:backdrop-blur-sm shadow-2xl border-none outline-none"
+    <FocusModal
+      open={isOpen}
+      onOpenChange={onClose}
     >
-      <div className="w-full max-w-sm p-6 bg-white flex flex-col gap-4">
-        <div className="space-y-2 text-center sm:text-left">
-          <h3 className="text-lg font-semibold text-slate-900">
-            Bug Details
-          </h3>
-          <p className="text-sm text-slate-500">
-            Here is where the developer's bug details will be, along with the ability to unclaim a claimed bug,
-            submit a fix, etc.
-          </p>
-        </div>
-        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-2">
-          <button 
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
-          >
-            Cancel
-          </button>
-          {/* <button 
-            onClick={handleConfirm}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm transition-colors"
-          >
-            Claim Bug
-          </button> */}
-        </div>
-      </div>
-    </dialog>
-  );
+      <FocusModal.Content
+        className="w-[50vw] max-w-[50vw] h-[50vh] max-h-[50vh] m-auto flex flex-col"
+      >
+        {/* <FocusModal.Header>
+          <Heading level="h1">Submit Bug Fix</Heading>
+        </FocusModal.Header> */}
+        <FocusModal.Body
+          className="flex flex-col gap-4 p-6"
+        >
+          <Heading level="h2">{bug?.title}</Heading>
+          <Text>{bug?.description}</Text>
+          <Text>Bounty: {bug?.bounty}</Text>
+
+          <div className="flex flex-col gap-y-2">
+            <Label>Fix Description</Label>
+            <Textarea
+              placeholder="Describe your fix..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={5}
+            />
+          </div>
+          <div className="flex flex-col gap-y-2">
+            <Label>File URL</Label>
+            <Input
+              placeholder="Enter the file URL..."
+              value={fileUrl}
+              onChange={(e) => setFileUrl(e.target.value)}
+            />
+          </div>          
+        </FocusModal.Body>
+        <FocusModal.Footer>
+          <div className="flex items-center gap-x-2">
+            <FocusModal.Close asChild>
+              <Button variant="secondary">Cancel</Button>
+            </FocusModal.Close>
+            <Button
+              variant="primary"
+              onClick={handleSubmit}
+              isLoading={isPending}
+              disabled={!fileUrl || !notes}
+            >
+              Submit Fix
+            </Button>
+          </div>
+        </FocusModal.Footer>
+      </FocusModal.Content>
+    </FocusModal>
+  )
 }
-// import { Bug } from "@lib/data/bugs"
-// import { Button } from "@medusajs/ui"
-// import Modal from "@modules/common/components/modal"
-// import { useState } from "react"
-
-// type ClaimBugModalProps = {
-//   open: boolean
-//   onOpenChange: () => void
-//   onSubmit: (bugId: string) => Promise<void>
-//   bug: Bug | null
-// }
-
-// export const ClaimBugModal = ({ open, onOpenChange, onSubmit, bug }: ClaimBugModalProps) => {
-//   const [isLoading, setIsLoading] = useState(false)
-
-//   const handleSubmit = async () => {
-//     if (!bug) return
-//     setIsLoading(true)
-//     try {
-//       await onSubmit(bug.id)
-//     } finally {
-//       setIsLoading(false)
-//     }
-//   }
-
-//   return (
-//     <Modal isOpen={open} close={onOpenChange}>
-//       <Modal.Title>Claim Bug</Modal.Title>
-//       <Modal.Body>
-//         <p>Are you sure you want to claim: <strong>{bug?.title}</strong>?</p>
-//       </Modal.Body>
-//       <Modal.Footer>
-//         <Button variant="secondary" onClick={onOpenChange}>
-//           Cancel
-//         </Button>
-//         <Button variant="primary" isLoading={isLoading} onClick={handleSubmit}>
-//           Claim Bug
-//         </Button>
-//       </Modal.Footer>
-//     </Modal>
-//   )
-// }

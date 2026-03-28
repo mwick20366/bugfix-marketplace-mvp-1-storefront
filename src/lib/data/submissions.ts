@@ -90,6 +90,9 @@ export const listSubmissions = async ({
       }
     )
     .then(({ submissions, count }) => {
+      console.log("Fetched submissions:", submissions)
+      console.log("Fetched submissions count:", count)
+      
       return {
         response: {
           submissions,
@@ -138,6 +141,40 @@ export const listDeveloperSubmissions = async ({
         },
         queryParams,
       }
+    })
+}
+
+export const createSubmission = async (
+  notes: string,
+  fileUrl: string,
+  bugId: string,
+): Promise<{ success: boolean; error: string | null }> => {
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  const next = {
+    ...(await getCacheOptions("submissions")),
+  }
+
+  return sdk.client.fetch(`/submissions`, {
+    method: "POST",
+    body: JSON.stringify({
+      notes,
+      file_url: fileUrl,
+      bug_id: bugId,
+    }),
+    headers,
+    next,
+    cache: "force-cache",
+  })
+    .then(async () => {
+      const cacheTag = await getCacheTag("submissions")
+      revalidateTag(cacheTag)
+      return { success: true, error: null }
+    })
+    .catch((err) => {
+      return { success: false, error: err.toString() }
     })
 }
 
