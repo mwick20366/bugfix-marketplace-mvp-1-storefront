@@ -24,18 +24,10 @@ const columns = [
     sortAscLabel: "A-Z",
     sortDescLabel: "Z-A",
   }),
-  columnHelper.accessor("description", {
-    header: "Description",
-    enableSorting: false,
-  }),
-  columnHelper.accessor("techStack", {
-    header: "Tech Stack",
-    enableSorting: false,
-  }),
-  columnHelper.accessor("created_at", {
-      header: "Posted",
+  columnHelper.accessor("updated_at", {
+      header: "Claimed",
       enableSorting: true,
-      sortLabel: "Posted",
+      sortLabel: "Claimed",
       sortAscLabel: "Oldest first",
       sortDescLabel: "Newest first",
       cell: ({ getValue }) => {
@@ -75,7 +67,7 @@ const columns = [
               currency_code: "usd",
             })}
           </div>
-        )      
+        )
     }
   }),
   columnHelper.accessor("status", {
@@ -113,8 +105,6 @@ export default function MyBugs() {
   const queryParams = {
     limit: BUG_LIMIT,
     developer_id: developer?.id,
-    // developerId: developer.id,
-    // status: "claimed",
   }
 
   const sortingParams = {
@@ -159,13 +149,7 @@ export default function MyBugs() {
     }),
     queryKey,
     placeholderData: keepPreviousData,
-    // enabled: false, // Disable automatic fetching on mount
   })
-
-  // useEffect(() => {
-  //   refetch()
-  //   // Fetch data when component mounts or dependencies change
-  // }, [])
 
   const handleRowClicked = (bug: Bug) => {
     setSelectedBug(bug)
@@ -200,7 +184,6 @@ export default function MyBugs() {
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           onFixSubmitted={refetch}
-          // onConfirm={handleClaimBug}
           bug={selectedBug}
         />
       )}

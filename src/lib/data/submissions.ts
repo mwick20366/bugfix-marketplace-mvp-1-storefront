@@ -29,6 +29,7 @@ export type Submission = {
     status: string,
     created_at: string,
     updated_at: string,
+    clientNotes?: string,
 }
 
 export const retrieveSubmission =

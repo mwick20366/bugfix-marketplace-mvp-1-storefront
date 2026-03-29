@@ -1,7 +1,8 @@
 "use client";
 
 import { Submission } from "@lib/data/submissions";
-import { useEffect, useRef } from "react";
+import { Button, Heading, Label, Text as MedusaText } from "@medusajs/ui";
+import Modal from "@modules/common/components/modal";
 
 interface SubmissionDetailsModalProps {
   isOpen: boolean;
@@ -15,56 +16,53 @@ export default function SubmissionDetailsModal({
   onClose = () => {}, 
   onConfirm = () => {},
   submission,
-  // submissionTitle = "this submission" 
 }: SubmissionDetailsModalProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-
-  // Sync the native dialog state with the isOpen prop
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (isOpen) {
-      dialog?.showModal();
-    } else {
-      dialog?.close();
-    }
-  }, [isOpen]);
-
-  // const handleConfirm = () => {
-  //   handleClaim();
-  //   onConfirm();
-  //   onClose(); // Close the modal after confirming
-  // }
-
   return (
-    <dialog
-      ref={dialogRef}
-      onClose={onClose} // Handles 'Esc' key naturally
-      className="rounded-xl p-0 backdrop:bg-slate-900/50 backdrop:backdrop-blur-sm shadow-2xl border-none outline-none"
-    >
-      <div className="w-full max-w-sm p-6 bg-white flex flex-col gap-4">
-        <div className="space-y-2 text-center sm:text-left">
-          <h3 className="text-lg font-semibold text-slate-900">
-            Submission Details
-          </h3>
-          <p className="text-sm text-slate-500">
-            Here is where the submission's details will be displayed.
-          </p>
+    <Modal isOpen={isOpen} close={onClose}>
+      <Modal.Title>Submission Details</Modal.Title>
+      <Modal.Body>
+        <Heading level="h2">{submission?.bug?.title}</Heading>
+        <div className="flex flex-col gap-y-2">
+            <Label>Bug Description</Label>
+            <MedusaText>{submission?.bug?.description}</MedusaText>
         </div>
-        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-2">
-          <button 
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
-          >
-            Cancel
-          </button>
-          {/* <button 
-            onClick={handleConfirm}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm transition-colors"
-          >
-            Claim Submission
-          </button> */}
+        <div className="flex flex-col gap-y-2">
+            <Label>Bounty</Label>
+            <MedusaText>${submission?.bug?.bounty}</MedusaText>
         </div>
-      </div>
-    </dialog>
+        <div className="flex flex-col gap-y-2">
+            <Label>Fix Description</Label>
+            <MedusaText>{submission?.notes}</MedusaText>
+        </div>
+        <div className="flex flex-col gap-y-2">
+            <Label>File URL</Label>
+            <a href={submission?.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+              {submission?.fileUrl}
+            </a>
+        </div>
+        <div className="flex flex-col gap-y-2">
+          <Label>Status</Label>
+          <MedusaText>{submission?.status}</MedusaText>
+        </div>
+        {submission?.clientNotes && (
+          <div className="flex flex-col gap-y-2">
+            <Label>Client Notes</Label>
+            <MedusaText>{submission.clientNotes}</MedusaText>
+          </div>
+        )}        
+      </Modal.Body>
+      <Modal.Footer>
+        <div className="flex items-center gap-x-2">
+          {submission?.status === "client approved" && (
+            <Button
+              variant="primary"
+              onClick={onConfirm}
+            >
+              Get Paid! (${submission?.bug?.bounty})
+            </Button>
+          )}
+        </div>
+      </Modal.Footer>
+    </Modal>
   );
 }

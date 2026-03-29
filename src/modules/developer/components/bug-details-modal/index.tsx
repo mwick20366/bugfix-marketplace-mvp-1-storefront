@@ -3,7 +3,6 @@
 import { Bug } from "@lib/data/bugs";
 import {
   Button,
-  FocusModal,
   Heading,
   Input,
   Label,
@@ -13,6 +12,7 @@ import {
 } from "@medusajs/ui";
 import { useState } from "react";
 import { useSubmitFix } from "@lib/hooks/use-submit-fix";
+import Modal from "@modules/common/components/modal";
 
 interface BugDetailsModalProps {
   isOpen: boolean;
@@ -47,57 +47,42 @@ export default function BugDetailsModal({
   }
 
   return (
-    <FocusModal
-      open={isOpen}
-      onOpenChange={onClose}
-    >
-      <FocusModal.Content
-        className="w-[50vw] max-w-[50vw] h-[50vh] max-h-[50vh] m-auto flex flex-col"
-      >
-        {/* <FocusModal.Header>
-          <Heading level="h1">Submit Bug Fix</Heading>
-        </FocusModal.Header> */}
-        <FocusModal.Body
-          className="flex flex-col gap-4 p-6"
-        >
-          <Heading level="h2">{bug?.title}</Heading>
-          <Text>{bug?.description}</Text>
-          <Text>Bounty: {bug?.bounty}</Text>
-
-          <div className="flex flex-col gap-y-2">
-            <Label>Fix Description</Label>
-            <Textarea
-              placeholder="Describe your fix..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={5}
-            />
-          </div>
-          <div className="flex flex-col gap-y-2">
-            <Label>File URL</Label>
-            <Input
-              placeholder="Enter the file URL..."
-              value={fileUrl}
-              onChange={(e) => setFileUrl(e.target.value)}
-            />
-          </div>          
-        </FocusModal.Body>
-        <FocusModal.Footer>
-          <div className="flex items-center gap-x-2">
-            <FocusModal.Close asChild>
-              <Button variant="secondary">Cancel</Button>
-            </FocusModal.Close>
-            <Button
-              variant="primary"
-              onClick={handleSubmit}
-              isLoading={isPending}
-              disabled={!fileUrl || !notes}
-            >
-              Submit Fix
-            </Button>
-          </div>
-        </FocusModal.Footer>
-      </FocusModal.Content>
-    </FocusModal>
+    <Modal isOpen={isOpen} close={onClose}>
+      <Modal.Title>Submit Bug Fix</Modal.Title>
+      <Modal.Body>
+        <Heading level="h2">{bug?.title}</Heading>
+        <Text>{bug?.description}</Text>
+        <Text>Bounty: {bug?.bounty}</Text>
+        <div className="flex flex-col gap-y-2">
+          <Label>Fix Description</Label>
+          <Textarea
+            placeholder="Describe your fix..."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={5}
+          />
+        </div>
+        <div className="flex flex-col gap-y-2">
+          <Label>File URL</Label>
+          <Input
+            placeholder="Enter the file URL..."
+            value={fileUrl}
+            onChange={(e) => setFileUrl(e.target.value)}
+          />
+        </div>          
+      </Modal.Body>
+      <Modal.Footer>
+        <div className="flex items-center gap-x-2">
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            isLoading={isPending}
+            disabled={!fileUrl || !notes}
+          >
+            Submit Fix
+          </Button>
+        </div>
+      </Modal.Footer>
+    </Modal>
   )
 }
