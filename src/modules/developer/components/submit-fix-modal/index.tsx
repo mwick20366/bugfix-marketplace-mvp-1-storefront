@@ -1,83 +1,121 @@
 "use client";
-
-import { Bug } from "@lib/data/bugs";
-import { toast } from "@medusajs/ui";
-import SubmitFixForm from "@modules/submissions/components/form";
-import { useEffect, useRef, useState } from "react";
+import { FormProvider, Controller, useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Bug, createBug } from "@lib/data/bugs";
+import {
+  Button,
+  Heading,
+  Text as MedusaText,
+  Textarea,
+  toast
+} from "@medusajs/ui";
+import Input from "@modules/common/components/input"
+import { useSubmitFix } from "@lib/hooks/use-submit-fix";
+import Modal from "@modules/common/components/modal";
+import { submitFixSchema, SubmitFixSchema } from "./validators";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface SubmitFixModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
-  bug: Bug; // Optional: show which bug is being fixed
+  onFixSubmitted?: () => void;
+  bug: Bug; // Optional: show which bug is being claimed
 }
 
 export default function SubmitFixModal({ 
   isOpen, 
   onClose, 
-  onConfirm,
   bug,
+  onFixSubmitted,
 }: SubmitFixModalProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const form = useForm<SubmitFixSchema>({
+    resolver: zodResolver(submitFixSchema),
+    mode: "onChange",
+    defaultValues: {
+        notes: "",
+        fileUrl: "",
+    },
+  })
 
-  const [successState, setSuccessState] = useState(false);
+  const queryClient = useQueryClient();
 
-  // Sync the native dialog state with the isOpen prop
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (isOpen) {
-      dialog?.showModal();
-    } else {
-      dialog?.close();
-    }
-  }, [isOpen]);
+  const { mutate: submitFix, isPending } = useSubmitFix(bug?.id, {
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-bugs"] })
+      queryClient.invalidateQueries({ queryKey: ["my-submissions"] })
+      queryClient.invalidateQueries({ queryKey: ["developer-me"] })
+      toast.success("Fix submitted successfully")
+      onFixSubmitted?.()
+      onClose()
+    },
+    onError: (error) => {
+      toast.error(`Failed to submit fix: ${error.message}`)
+    },
+  })
 
-  useEffect(() => {
-    if (!isOpen) {
-      setSuccessState(false);
-    }
-  }, [isOpen]);
+  const handleSubmit = form.handleSubmit((data) => {
+    submitFix(data)
+  })
 
-  useEffect(() => {
-    if (successState) {
-      toast.success("Bug fix submitted successfully");
-      const timer = setTimeout(() => {
-        setSuccessState(false);
-      }, 3000); // Clear success state after 3 seconds
+  // const handleSubmit = () => {
+  //   const { notes, fileUrl } = form.getValues()
 
-      return () => clearTimeout(timer);
-    }
-  }, [successState]);
-
-  const handleSuccess = () => {
-    setSuccessState(true);
-  }
-
-  const handleError = (error: Error) => {
-    toast.error(`Failed to submit bug fix: ${error.message}`)
-  }
+  //   submitFix({ notes, fileUrl }, {
+  //     onSuccess: () => {
+  //       toast.success("Fix submitted successfully")
+  //       onFixSubmitted?.()
+  //       onClose()
+  //     },
+  //     onError: (error) => {
+  //       toast.error(`Failed to submit fix: ${error.message}`)
+  //     },
+  //   })
+  // }
 
   return (
-    <dialog
-      ref={dialogRef}
-      onClose={onClose} // Handles 'Esc' key naturally
-      className="rounded-xl p-0 backdrop:bg-slate-900/50 backdrop:backdrop-blur-sm shadow-2xl border-none outline-none"
-    >
-      <div className="w-full max-w-sm p-6 bg-white flex flex-col gap-4">
-        <div className="space-y-2 text-center sm:text-left">
-          <h3 className="text-lg font-semibold text-slate-900">
-            Submit Your Fix
-          </h3>
-          <div className="text-sm text-slate-500">
-            <SubmitFixForm
-              bug={bug}
-              onCancel={onClose}
-              onSuccess={handleSuccess}
-              onError={handleError}
+    <Modal isOpen={isOpen} close={onClose}>
+      <Modal.Title>Submit Bug Fix</Modal.Title>
+      <FormProvider {...form}>
+        <form onSubmit={handleSubmit} className="flex h-full flex-col overflow-hidden">
+          <Modal.Body>
+            <Heading level="h2">{bug?.title}</Heading>
+            <MedusaText>{bug?.description}</MedusaText>
+            <MedusaText>Bounty: {bug?.bounty}</MedusaText>
+            <Controller
+              control={form.control}
+              name="notes"
+              render={({ field, fieldState: { error } }) => (
+                <div className="flex flex-col gap-y-2">
+                  <Textarea placeholder={"Notes"} {...field} rows={5} />
+                  {error && <span className="text-red-500 text-sm">{error.message}</span>}
+                </div>
+              )}
             />
-          </div>
-        </div>
-      </div>
-    </dialog>
-  );
+            <Controller
+              control={form.control}
+              name="fileUrl"
+              render={({ field, fieldState: { error } }) => (
+                <div className="flex flex-col gap-y-2">
+                  <Input label={"File URL"} {...field} />
+                  {error && <span className="text-red-500 text-sm">{error.message}</span>}
+                </div>
+              )}
+            />
+          </Modal.Body>
+          <Modal.Footer>
+            <div className="flex items-center gap-x-2">
+              <Button
+                variant="primary"
+                onClick={handleSubmit}
+                isLoading={isPending}
+                disabled={!form.formState.isValid || isPending}
+              >
+                Submit Fix
+              </Button>
+            </div>
+          </Modal.Footer>
+        </form>
+      </FormProvider>
+    </Modal>
+  )
 }

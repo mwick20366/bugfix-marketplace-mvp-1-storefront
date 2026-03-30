@@ -196,20 +196,31 @@ export const retrieveDeveloperBugs =
       .catch(() => null)
   }
 
-export const addClientBug = async (
-  currentState: Record<string, unknown>,
-  formData: FormData
-): Promise<any> => {
+export const createBug = async ({
+  title,
+  description,
+  techStack,
+  repoLink,
+  bounty,
+  clientId,
+}: {
+  title: string
+  description: string
+  techStack: string
+  repoLink: string
+  bounty: number
+  clientId: string
+}): Promise<any> => {
 
-  console.log('Adding bug with form data:', Object.fromEntries(formData.entries()))
+  console.log('Adding bug with form data:', { title, description, techStack, repoLink, bounty, clientId })
 
   const bug = {
-    title: formData.get("title") as string,
-    description: formData.get("description") as string,
-    techStack: formData.get("techStack") as string,
-    repoLink: formData.get("repoLink") as string,
-    bounty: parseFloat(formData.get("bounty") as string),
-    client_id: formData.get("clientId") as string,
+    title,
+    description,
+    techStack,
+    repoLink,
+    bounty,
+    client_id: clientId,
   }
 
   const headers = {
@@ -231,27 +242,40 @@ export const addClientBug = async (
     })
 }
 
-export const updateClientBug = async (
-  currentState: Record<string, unknown>,
-  formData: FormData
-): Promise<any> => {
+export const updateBug = async ({
+  title,
+  description,
+  techStack,
+  repoLink,
+  bounty,
+  clientId,
+  bugId,
+}: {
+  title: string
+  description: string
+  techStack: string
+  repoLink: string
+  bounty: number
+  clientId: string
+  bugId: string
+}): Promise<any> => {
 
   const bug = {
-    title: formData.get("title") as string,
-    description: formData.get("description") as string,
-    techStack: formData.get("techStack") as string,
-    repoLink: formData.get("repoLink") as string,
-    bounty: parseFloat(formData.get("bounty") as string),
-    client_id: formData.get("clientId") as string,
-    id: formData.get("bugId") as string,
+    title,
+    description,
+    techStack,
+    repoLink,
+    bounty,
+    client_id: clientId,
+    id: bugId,
   }
 
   const headers = {
     ...(await getAuthHeaders()),
   }
 
-  return await sdk.client.fetch(`/bug`, {
-    method: "PUT",
+  return await sdk.client.fetch(`/bugs/${bugId}`, {
+    method: "POST",
     body: bug,
     headers,
     })
@@ -276,6 +300,35 @@ export const claimBug = async (
   }
 
   return await sdk.client.fetch(`/bugs/${bugId}/claim`, {
+    method: "POST",
+    // body: { developer_id: developerId },
+    headers,
+  })
+    .then(async () => {
+      const bugsCacheTag = await getCacheTag("bugs")
+      revalidateTag(bugsCacheTag)
+
+      const developerCacheTag = await getCacheTag("developers")
+      revalidateTag(developerCacheTag)
+
+      return { success: true, error: null }
+    })
+    .catch((err) => {
+      return { success: false, error: err.toString() }
+    })
+}
+
+export const unclaimBug = async (
+  bugId: string,
+  // developerId: string,
+): Promise<any> => {
+  // const bugId = formData.get("bugId") as string
+  // const developerId = formData.get("developerId") as string
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  return await sdk.client.fetch(`/bugs/${bugId}/unclaim`, {
     method: "POST",
     // body: { developer_id: developerId },
     headers,

@@ -18,6 +18,9 @@ importers:
       '@heroicons/react':
         specifier: ^2.2.0
         version: 2.2.0(react@19.0.4)
+      '@hookform/resolvers':
+        specifier: ^5.2.2
+        version: 5.2.2(react-hook-form@7.72.0(react@19.0.4))
       '@medusajs/icons':
         specifier: latest
         version: 2.13.4(react@19.0.4)
@@ -60,6 +63,9 @@ importers:
       react-dom:
         specifier: 19.0.4
         version: 19.0.4(react@19.0.4)
+      react-hook-form:
+        specifier: ^7.72.0
+        version: 7.72.0(react@19.0.4)
       react-jwt:
         specifier: ^2.0.0
         version: 2.0.0(react@19.0.4)
@@ -81,6 +87,9 @@ importers:
       webpack:
         specifier: ^5
         version: 5.105.4
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
     devDependencies:
       '@babel/core':
         specifier: ^7.17.5
@@ -361,6 +370,11 @@ packages:
     resolution: {integrity: sha512-LMcepvRaS9LYHJGsF0zzmgKCUim/X3N/DQKc4jepAXJ7l8QxJ1PmxJzqplF2Z3FE4PqBAIGyJAQ/w4B5dsqbtQ==}
     peerDependencies:
       react: '>= 16 || ^19.0.0-rc'
+
+  '@hookform/resolvers@5.2.2':
+    resolution: {integrity: sha512-A/IxlMLShx3KjV/HeTcTfaMxdwy690+L/ZADoeaTltLx+CVuzkeVIPuybK3jrRfw7YZnmdKsVVHAlEPIAEUNlA==}
+    peerDependencies:
+      react-hook-form: ^7.55.0
 
   '@humanwhocodes/config-array@0.9.5':
     resolution: {integrity: sha512-ObyMyWxZiCu/yTisA7uzx81s40xR2fD5Cg/2Kq7G02ajkNubJf6BopgDTmDyc3U7sXpNKM8cYOw7s7Tyr+DnCw==}
@@ -2023,6 +2037,9 @@ packages:
   '@rushstack/eslint-patch@1.16.1':
     resolution: {integrity: sha512-TvZbIpeKqGQQ7X0zSCvPH9riMSFQFSggnfBjFZ1mEoILW+UuXCKwOoPcgjMwiUtRqFZ8jWhPJc4um14vC6I4ag==}
 
+  '@standard-schema/utils@0.3.0':
+    resolution: {integrity: sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g==}
+
   '@stripe/react-stripe-js@5.6.1':
     resolution: {integrity: sha512-5xBrjkGmFvKvpMod6VvpOaFaa67eRbmieKeFTePZyOr/sUXzm7A3YY91l330pS0usUst5PxTZDUZHWfOc0v1GA==}
     peerDependencies:
@@ -3670,6 +3687,12 @@ packages:
     peerDependencies:
       react: ^19.0.4
 
+  react-hook-form@7.72.0:
+    resolution: {integrity: sha512-V4v6jubaf6JAurEaVnT9aUPKFbNtDgohj5CIgVGyPHvT9wRx5OZHVjz31GsxnPNI278XMu+ruFz+wGOscHaLKw==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17 || ^18 || ^19
+
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
@@ -4189,6 +4212,9 @@ packages:
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
 
+  zod@4.3.6:
+    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
+
 snapshots:
 
   '@algolia/abtesting@1.15.2':
@@ -4505,6 +4531,11 @@ snapshots:
   '@heroicons/react@2.2.0(react@19.0.4)':
     dependencies:
       react: 19.0.4
+
+  '@hookform/resolvers@5.2.2(react-hook-form@7.72.0(react@19.0.4))':
+    dependencies:
+      '@standard-schema/utils': 0.3.0
+      react-hook-form: 7.72.0(react@19.0.4)
 
   '@humanwhocodes/config-array@0.9.5':
     dependencies:
@@ -6572,6 +6603,8 @@ snapshots:
 
   '@rushstack/eslint-patch@1.16.1': {}
 
+  '@standard-schema/utils@0.3.0': {}
+
   '@stripe/react-stripe-js@5.6.1(@stripe/stripe-js@8.10.0)(react-dom@19.0.4(react@19.0.4))(react@19.0.4)':
     dependencies:
       '@stripe/stripe-js': 8.10.0
@@ -8443,6 +8476,10 @@ snapshots:
       react: 19.0.4
       scheduler: 0.25.0
 
+  react-hook-form@7.72.0(react@19.0.4):
+    dependencies:
+      react: 19.0.4
+
   react-is@16.13.1: {}
 
   react-jwt@2.0.0(react@19.0.4):
@@ -9122,3 +9159,5 @@ snapshots:
   xtend@4.0.2: {}
 
   yallist@3.1.1: {}
+
+  zod@4.3.6: {}

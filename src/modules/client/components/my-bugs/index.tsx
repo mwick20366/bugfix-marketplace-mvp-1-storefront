@@ -8,16 +8,23 @@ import {
   DataTableSortingState,
   DataTableColumnDef,
   toast,
+  IconButton,
+  Tooltip
 } from "@medusajs/ui"
+import { Pencil, Trash } from "@medusajs/icons"
 import BugsListTemplate from "@modules/bugs/components/list-template"
-import { keepPreviousData, useQuery } from "@tanstack/react-query"
+import { keepPreviousData, QueryClient, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useMemo, useState } from "react"
 import BugDetailsModal from "../bug-details-modal"
 import { useClaimBug } from "@lib/hooks/use-claim-bug"
+import ClientBugDetailsModal from "../bug-details-modal"
 
 const columnHelper = createDataTableColumnHelper<Bug>()
 
-const columns = [
+const createColumns = (
+  onEdit: (bug: Bug) => void,
+  onDelete: (bug: Bug) => void
+) => [
   columnHelper.accessor("title", {
     header: "Title",
     enableSorting: true,
@@ -25,10 +32,10 @@ const columns = [
     sortAscLabel: "A-Z",
     sortDescLabel: "Z-A",
   }),
-  columnHelper.accessor("description", {
-    header: "Description",
-    enableSorting: false,
-  }),
+  // columnHelper.accessor("description", {
+  //   header: "Description",
+  //   enableSorting: false,
+  // }),
   columnHelper.accessor("techStack", {
     header: "Tech Stack",
     enableSorting: false,
@@ -100,7 +107,46 @@ const columns = [
         </div>
       )
     },
-  })
+  }),
+  columnHelper.display({
+    id: "actions",
+    header: "",
+    cell: ({ row }) => {
+      
+      const bug = row.original
+      const canDelete = bug.status === "open"
+
+      const deleteButton = (
+        <IconButton
+          size="small"
+          variant="transparent"
+          onClick={() => canDelete && onDelete(bug)}
+          disabled={!canDelete}
+        >
+          <Trash />
+        </IconButton>
+      )
+
+      return (
+        <div className="flex items-center gap-x-2" onClick={(e) => e.stopPropagation()}>
+          <IconButton
+            size="small"
+            variant="transparent"
+            onClick={() => onEdit(bug)}
+          >
+            <Pencil />
+          </IconButton>
+          {canDelete ? (
+            deleteButton
+          ) : (
+            <Tooltip content="You can only delete open bugs">
+              {deleteButton}
+            </Tooltip>
+          )}
+        </div>
+      )
+    },
+  }),
 ]
 
 const BUG_LIMIT = 15
@@ -126,6 +172,11 @@ export default function MyBugs(props: MyBugsProps) {
 
   const limit = queryParams?.limit || 15
 
+  const columns = useMemo(() => createColumns(
+    (bug) => { /* open edit modal */ },
+    (bug) => { /* trigger delete mutation */ }
+  ), [])
+
   const [pagination, setPagination] = useState<DataTablePaginationState>({
     pageIndex: 0,
     pageSize: limit,
@@ -149,7 +200,7 @@ export default function MyBugs(props: MyBugsProps) {
     return ["bugs", limit, offset, search, sorting?.id, sorting?.desc]
   }, [offset, search, sorting?.id, sorting?.desc])
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryFn: () => listBugs({
       queryParams: {
         ...queryParams,
@@ -160,6 +211,7 @@ export default function MyBugs(props: MyBugsProps) {
       },
     }),
     queryKey,
+    staleTime: 0,
     placeholderData: keepPreviousData,
   })
 
@@ -175,11 +227,15 @@ export default function MyBugs(props: MyBugsProps) {
 
   const { mutate: claimBug } = useClaimBug(selectedBug?.id || "") 
 
+  const queryClient = useQueryClient()
+
   const handleClaimBug = async () => {
     claimBug(undefined, {
       onSuccess: () => {
         toast.success("Bug claimed successfully")
         
+        queryClient.invalidateQueries({ queryKey: ["bugs"] })
+
         setIsModalOpen(false)
         setSelectedBug(null)
       },
@@ -191,9 +247,6 @@ export default function MyBugs(props: MyBugsProps) {
 
   return (
     <div className="w-full">
-      <div className="flex w-full items-center justify-between">
-        <h1 className={`text-2xl`}>Bugs</h1>
-      </div>
       <BugsListTemplate
         bugs={data?.response?.bugs || []}
         columns={columns as DataTableColumnDef<Bug>[]}
@@ -207,7 +260,7 @@ export default function MyBugs(props: MyBugsProps) {
         search={search}
         setSearch={setSearch}
       />
-      <BugDetailsModal
+      <ClientBugDetailsModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onConfirm={handleClaimBug}

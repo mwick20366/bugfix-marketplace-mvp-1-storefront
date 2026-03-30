@@ -23,22 +23,22 @@ export default function SubmissionDetailsModal({
       <Modal.Body>
         <Heading level="h2">{submission?.bug?.title}</Heading>
         <div className="flex flex-col gap-y-2">
-            <Label>Bug Description</Label>
-            <MedusaText>{submission?.bug?.description}</MedusaText>
+          <Label>Bug Description</Label>
+          <MedusaText>{submission?.bug?.description}</MedusaText>
         </div>
         <div className="flex flex-col gap-y-2">
-            <Label>Bounty</Label>
-            <MedusaText>${submission?.bug?.bounty}</MedusaText>
+          <Label>Bounty</Label>
+          <MedusaText>${submission?.bug?.bounty}</MedusaText>
         </div>
         <div className="flex flex-col gap-y-2">
-            <Label>Fix Description</Label>
-            <MedusaText>{submission?.notes}</MedusaText>
+          <Label>Fix Description</Label>
+          <MedusaText>{submission?.notes}</MedusaText>
         </div>
         <div className="flex flex-col gap-y-2">
-            <Label>File URL</Label>
-            <a href={submission?.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
-              {submission?.fileUrl}
-            </a>
+          <Label>File URL</Label>
+          <a href={submission?.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+            {submission?.fileUrl}
+          </a>
         </div>
         <div className="flex flex-col gap-y-2">
           <Label>Status</Label>

@@ -17,6 +17,7 @@
   "dependencies": {
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.2.0",
+    "@hookform/resolvers": "^5.2.2",
     "@medusajs/icons": "latest",
     "@medusajs/js-sdk": "latest",
     "@medusajs/ui": "latest",
@@ -31,13 +32,15 @@
     "react": "19.0.4",
     "react-country-flag": "^3.1.0",
     "react-dom": "19.0.4",
+    "react-hook-form": "^7.72.0",
     "react-jwt": "^2.0.0",
     "react-router-dom": "^7.13.2",
     "server-only": "^0.0.1",
     "tailwindcss-radix": "^2.8.0",
     "use-debounce": "^10.1.0",
     "version": "^0.1.2",
-    "webpack": "^5"
+    "webpack": "^5",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@babel/core": "^7.17.5",

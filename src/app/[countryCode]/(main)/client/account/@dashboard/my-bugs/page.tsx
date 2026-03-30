@@ -3,8 +3,8 @@ import { notFound } from "next/navigation"
 
 import MyBugs from "@modules/client/components/my-bugs"
 
-import { getRegion } from "@lib/data/regions"
 import { retrieveClient } from "@lib/data/client"
+import { CreateBug } from "@modules/bugs/components/create-bug"
 
 export const metadata: Metadata = {
   title: "My Bugs",
@@ -14,8 +14,6 @@ export const metadata: Metadata = {
 export default async function Page(props: {
   params: Promise<{ countryCode: string }>
 }) {
-  const params = await props.params
-  const { countryCode } = params
   const client = await retrieveClient()
 
   if (!client) {
@@ -30,6 +28,9 @@ export default async function Page(props: {
           View, update, or add new bugs. You can manage your bugs and track their status here.
         </p>
       </div>
+      <CreateBug
+        client={client}
+      />
       <MyBugs client={client} />
     </div>
   )

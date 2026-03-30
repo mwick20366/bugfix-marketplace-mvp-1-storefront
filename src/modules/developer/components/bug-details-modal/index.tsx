@@ -1,83 +1,89 @@
-"use client";
+// src/components/bugs/bug-details-modal.tsx
+"use client"
 
-import { Bug } from "@lib/data/bugs";
-import {
-  Button,
-  Heading,
-  Input,
-  Label,
-  Text,
-  Textarea,
-  toast
-} from "@medusajs/ui";
-import { useState } from "react";
-import { useSubmitFix } from "@lib/hooks/use-submit-fix";
-import Modal from "@modules/common/components/modal";
+import { Button, Label } from "@medusajs/ui"
+import { Text as MedusaText } from "@medusajs/ui"
+import { Bug } from "@lib/data/bugs"
+import Modal from "@modules/common/components/modal" // your custom Modal wrapper
 
-interface BugDetailsModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onFixSubmitted?: () => void;
-  bug: Bug; // Optional: show which bug is being claimed
+type BugDetailsModalProps = {
+  bug: Bug | null
+  isOpen: boolean
+  onClose: () => void
+  onSubmitFix: (bug: Bug) => void
+  onUnclaim: (bug: Bug) => void
+  isUnclaiming?: boolean
 }
 
-export default function BugDetailsModal({ 
-  isOpen, 
-  onClose, 
+export const BugDetailsModal = ({
   bug,
-  onFixSubmitted,
-  // bugTitle = "this bug" 
-}: BugDetailsModalProps) {
-  const [notes, setNotes] = useState("")
-  const [fileUrl, setFileUrl] = useState("")
+  isOpen,
+  onClose,
+  onSubmitFix,
+  onUnclaim,
+  isUnclaiming,
+}: BugDetailsModalProps) => {
+  if (!bug) return null
 
-  const { mutate: submitFix, isPending } = useSubmitFix(bug?.id)
-
-  const handleSubmit = () => {
-    submitFix({ notes, fileUrl }, {
-      onSuccess: () => {
-        toast.success("Fix submitted successfully")
-        onFixSubmitted?.()
-        onClose()
-      },
-      onError: (error) => {
-        toast.error(`Failed to submit fix: ${error.message}`)
-      },
-    })
-  }
+  const canSubmitFix = bug.status === "claimed"
+  const canUnclaim = bug.status === "claimed"
 
   return (
-    <Modal isOpen={isOpen} close={onClose}>
-      <Modal.Title>Submit Bug Fix</Modal.Title>
+    <Modal isOpen={isOpen} close={onClose} size="medium">
+      <Modal.Title>Bug Details</Modal.Title>
       <Modal.Body>
-        <Heading level="h2">{bug?.title}</Heading>
-        <Text>{bug?.description}</Text>
-        <Text>Bounty: {bug?.bounty}</Text>
-        <div className="flex flex-col gap-y-2">
-          <Label>Fix Description</Label>
-          <Textarea
-            placeholder="Describe your fix..."
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={5}
-          />
+        <div className="flex flex-col gap-y-4">
+          <div>
+            <Label size="small" weight="plus">Title</Label>
+            <MedusaText>{bug.title}</MedusaText>
+          </div>
+          <div>
+            <Label size="small" weight="plus">Description</Label>
+            <MedusaText>{bug.description}</MedusaText>
+          </div>
+          {bug.repoLink && (
+            <div>
+              <Label size="small" weight="plus">Repository URL</Label>
+              <a
+                href={bug.repoLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline text-sm"
+              >
+                {bug.repoLink}
+              </a>
+            </div>
+          )}
+          {bug.techStack && (
+            <div>
+              <Label size="small" weight="plus">Tech Stack</Label>
+              <MedusaText>{bug.techStack}</MedusaText>
+            </div>
+          )}
+          <div>
+            <Label size="small" weight="plus">Bounty</Label>
+            <MedusaText>${bug.bounty}</MedusaText>
+          </div>
+          <div>
+            <Label size="small" weight="plus">Status</Label>
+            <MedusaText>{bug.status}</MedusaText>
+          </div>
         </div>
-        <div className="flex flex-col gap-y-2">
-          <Label>File URL</Label>
-          <Input
-            placeholder="Enter the file URL..."
-            value={fileUrl}
-            onChange={(e) => setFileUrl(e.target.value)}
-          />
-        </div>          
       </Modal.Body>
       <Modal.Footer>
         <div className="flex items-center gap-x-2">
           <Button
+            variant="secondary"
+            onClick={() => canUnclaim && onUnclaim(bug)}
+            disabled={!canUnclaim}
+            isLoading={isUnclaiming}
+          >
+            Unclaim
+          </Button>
+          <Button
             variant="primary"
-            onClick={handleSubmit}
-            isLoading={isPending}
-            disabled={!fileUrl || !notes}
+            onClick={() => canSubmitFix && onSubmitFix(bug)}
+            disabled={!canSubmitFix}
           >
             Submit Fix
           </Button>

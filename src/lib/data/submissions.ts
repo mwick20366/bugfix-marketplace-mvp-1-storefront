@@ -181,17 +181,16 @@ export const createSubmission = async (
 
 export const approveSubmission = async (
   submissionId: string,
+  clientNotes: string,
   // developerId: string,
 ): Promise<any> => {
-  // const submissionId = formData.get("submissionId") as string
-  // const developerId = formData.get("developerId") as string
   const headers = {
     ...(await getAuthHeaders()),
   }
 
   return await sdk.client.fetch(`/submissions/${submissionId}/approve`, {
     method: "POST",
-    // body: { developer_id: developerId },
+    body: JSON.stringify({ clientNotes: clientNotes }),
     headers,
   })
     .then(async () => {
