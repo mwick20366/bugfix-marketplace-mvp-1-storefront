@@ -1,28 +1,16 @@
+"use client"
 import { Container } from "@medusajs/ui"
 import { retrieveClient } from "@lib/data/client"
+import { useQuery } from "@tanstack/react-query"
+import StatCard from "@modules/dashboard/components/stat-card"
 
-type StatCardProps = {
-  title: string
-  value: string | number
-  description?: string
-}
-
-const StatCard = ({ title, value, description }: StatCardProps) => (
-  <Container className="flex flex-col gap-y-2 p-6">
-    <p className="text-ui-fg-muted text-sm font-medium">{title}</p>
-    <p className="text-ui-fg-base text-3xl font-semibold">{value}</p>
-    {description && (
-      <p className="text-ui-fg-subtle text-xs">{description}</p>
-    )}
-  </Container>
-)
-
-export default async function ClientDashboardPage() {
-  // const { data, isLoading } = useQuery({
-  //   queryKey: ["client-me"],
-  //   queryFn: () => fetch("/clients/me").then((res) => res.json()),
-  // })
-  const data = await retrieveClient().catch(() => null)
+export default function ClientDashboardPage() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["client-me"],
+    // TODO: switch to sdk call
+    queryFn: () => fetch("/clients/me").then((res) => res.json()),
+  })
+  // const data = await retrieveClient().catch(() => null)
 
   console.log("Client Dashboard Data:", data) // Debugging log
 
@@ -45,27 +33,30 @@ export default async function ClientDashboardPage() {
         </h1>
         <p className="text-ui-fg-muted text-sm">Here's an overview of your bugs.</p>
       </div>
-
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Open Bugs"
-          value={dashboard?.open_bugs ?? 0}
+          value={isLoading ? "..." : dashboard?.open_bugs ?? 0}
           description="Awaiting a developer"
+          href="/client/account/my-bugs?status=open"
         />
         <StatCard
           title="In Progress"
-          value={dashboard?.in_progress ?? 0}
+          value={isLoading ? "..." : dashboard?.in_progress ?? 0}
           description="Claimed or fix submitted"
+          href="/client/account/my-bugs?status=claimed&status=fix+submitted"
         />
         <StatCard
           title="Pending Approvals"
-          value={dashboard?.pending_approvals ?? 0}
+          value={isLoading ? "..." : dashboard?.pending_approvals ?? 0}
           description="Awaiting your review"
+          href="/client/account/my-bugs?status=fix+submitted"
         />
         <StatCard
           title="Total Spent"
-          value={formattedTotalSpent}
+          value={isLoading ? "..." : formattedTotalSpent}
           description="Bounties paid out"
+          href="/client/account/my-bugs?status=client+approved"
         />
       </div>
     </div>

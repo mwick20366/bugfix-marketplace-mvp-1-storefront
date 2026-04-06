@@ -5,6 +5,7 @@ import MyBugs from "@modules/client/components/my-bugs"
 
 import { retrieveClient } from "@lib/data/client"
 import { CreateBug } from "@modules/bugs/components/create-bug"
+import ClientBugsView from "@modules/client/components/client-bugs-view"
 
 export const metadata: Metadata = {
   title: "My Bugs",
@@ -31,7 +32,8 @@ export default async function Page(props: {
       <CreateBug
         client={clientData.client}
       />
-      <MyBugs client={clientData.client} />
+      <ClientBugsView client={clientData.client} />
+      {/* <MyBugs client={clientData.client} /> */}
     </div>
   )
 }

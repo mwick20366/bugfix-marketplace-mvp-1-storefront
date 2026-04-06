@@ -77,14 +77,17 @@ const createColumns = (
 const BUG_LIMIT = 15
 
 type MyBugsProps = {
-  client: Client
+  client: Client,
+  statusFilter?: string[]
+  difficultyFilter?: string[]
 }
+
 export default function MyBugs(props: MyBugsProps) {
   const [selectedBug, setSelectedBug] = useState<Bug | null>(null)
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false)
 
-  const { client } = props
+  const { client, statusFilter = [], difficultyFilter = [] } = props
 
   const queryParams = {
     limit: BUG_LIMIT,
@@ -123,22 +126,24 @@ export default function MyBugs(props: MyBugsProps) {
   }
 
   const queryKey = useMemo(() => {
-    return ["bugs", limit, offset, search, sorting?.id, sorting?.desc]
-  }, [offset, search, sorting?.id, sorting?.desc])
+    return ["client-bugs", limit, offset, search, sorting?.id, sorting?.desc, statusFilter, difficultyFilter]
+  }, [offset, search, sorting?.id, sorting?.desc, statusFilter, difficultyFilter])
 
   const { data, isLoading } = useQuery({
     queryFn: () => listBugs({
       queryParams: {
-        ...queryParams,
+        client_id: client?.id,
         limit,
         offset,
         order: sorting ? `${sorting.desc ? "-" : ""}${sorting.id}` : undefined,
         q: search,
+        ...(statusFilter.length > 0 ? { status: statusFilter } : {}),
+        ...(difficultyFilter.length > 0 ? { difficulty: difficultyFilter } : {}),
       },
     }),
     queryKey,
-    staleTime: 0,
     placeholderData: keepPreviousData,
+    enabled: !!client?.id,
   })
 
   const handleRowClicked = (bug: Bug) => {

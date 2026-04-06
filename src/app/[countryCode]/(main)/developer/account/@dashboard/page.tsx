@@ -2,26 +2,28 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { Container } from "@medusajs/ui"
+import StatCard from "@modules/dashboard/components/stat-card"
 
-type StatCardProps = {
-  title: string
-  value: string | number
-  description?: string
-}
+// type StatCardProps = {
+//   title: string
+//   value: string | number
+//   description?: string
+// }
 
-const StatCard = ({ title, value, description }: StatCardProps) => (
-  <Container className="flex flex-col gap-y-2 p-6">
-    <p className="text-ui-fg-muted text-sm font-medium">{title}</p>
-    <p className="text-ui-fg-base text-3xl font-semibold">{value}</p>
-    {description && (
-      <p className="text-ui-fg-subtle text-xs">{description}</p>
-    )}
-  </Container>
-)
+// const StatCard = ({ title, value, description }: StatCardProps) => (
+//   <Container className="flex flex-col gap-y-2 p-6">
+//     <p className="text-ui-fg-muted text-sm font-medium">{title}</p>
+//     <p className="text-ui-fg-base text-3xl font-semibold">{value}</p>
+//     {description && (
+//       <p className="text-ui-fg-subtle text-xs">{description}</p>
+//     )}
+//   </Container>
+// )
 
 export default function DeveloperDashboardPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["developer-me"],
+    // TODO: switch to sdk call
     queryFn: () => fetch("/developers/me").then((res) => res.json()),
   })
 
@@ -50,21 +52,25 @@ export default function DeveloperDashboardPage() {
           title="Available Bugs"
           value={isLoading ? "..." : dashboard?.available_bugs ?? 0}
           description="Open bugs you can claim"
+          href="/developer/account/bug-marketplace?status=open"
         />
         <StatCard
           title="Active Claims"
           value={isLoading ? "..." : dashboard?.active_claims ?? 0}
           description="Bugs you're working on"
+          href="/developer/account/my-bugs?status=claimed"
         />
         <StatCard
           title="Pending Review"
           value={isLoading ? "..." : dashboard?.pending_review ?? 0}
           description="Submissions awaiting client approval"
+          href="/developer/account/my-bugs?status=fix+submitted"
         />
         <StatCard
           title="Total Earned"
           value={isLoading ? "..." : formattedTotalEarned}
           description="Bounties received"
+          href="/developer/account/my-bugs?status=client+approved"
         />
       </div>
     </div>
