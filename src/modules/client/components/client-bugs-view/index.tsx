@@ -3,7 +3,7 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { useCallback } from "react"
-import BugFilters from "@modules/developer/components/bug-filters"
+import BugFilters from "@modules/client/components/bug-filters"
 import MyBugs from "../my-bugs"
 import { Client } from "@lib/data/client"
 // import ClientBugsList from "@modules/client/components/client-bugs-list"
@@ -33,8 +33,8 @@ export default function ClientBugsView({ client }: { client: Client }) {
         <BugFilters
           selectedStatuses={selectedStatuses}
           selectedDifficulties={selectedDifficulties}
-          onStatusChange={(values) => updateFilters("status", values)}
-          onDifficultyChange={(values) => updateFilters("difficulty", values)}
+          onStatusChange={(values: string[]) => updateFilters("status", values)}
+          onDifficultyChange={(values: string[]) => updateFilters("difficulty", values)}
         />
       </aside>
 

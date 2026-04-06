@@ -126,7 +126,7 @@ export default function MyBugs(props: MyBugsProps) {
   }
 
   const queryKey = useMemo(() => {
-    return ["client-bugs", limit, offset, search, sorting?.id, sorting?.desc, statusFilter, difficultyFilter]
+    return ["bugs", limit, offset, search, sorting?.id, sorting?.desc, statusFilter, difficultyFilter]
   }, [offset, search, sorting?.id, sorting?.desc, statusFilter, difficultyFilter])
 
   const { data, isLoading } = useQuery({

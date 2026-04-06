@@ -75,10 +75,11 @@ type BugFiltersProps = {
 }
 
 const statusOptions: FilterOption[] = [
-  { value: "claimed", label: "Claimed" },
-  { value: "fix submitted", label: "Fix Submitted" },
-  { value: "client approved", label: "Client Approved" },
-  { value: "client rejected", label: "Client Rejected" },
+  { value: "open", label: "Open" },
+  { value: "claimed", label: "Developer Claimed" },
+  { value: "fix submitted", label: "Developer Fix Submitted" },
+  { value: "client approved", label: "Approved" },
+  { value: "client rejected", label: "Rejected" },
 ]
 
 const difficultyOptions: FilterOption[] = [
