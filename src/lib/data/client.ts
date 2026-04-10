@@ -155,7 +155,7 @@ export async function loginClient(_currentState: unknown, formData: FormData) {
   }
 }
 
-export async function signoutClient(countryCode: string) {
+export async function signoutClient() {
   await sdk.auth.logout()
 
   await removeAuthToken()
@@ -168,5 +168,5 @@ export async function signoutClient(countryCode: string) {
   const cartCacheTag = await getCacheTag("clients")
   revalidateTag(cartCacheTag)
 
-  redirect(`/${countryCode}/client/account`)
+  redirect(`/client/account`)
 }

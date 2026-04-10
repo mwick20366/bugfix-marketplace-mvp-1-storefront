@@ -18,7 +18,7 @@ import { useMemo, useState } from "react"
 import { useClaimBug } from "@lib/hooks/use-claim-bug"
 import ClientBugDetailsModal from "../bug-details-modal"
 import { title } from "process"
-import { bountyColumn, createdAtColumn, clientStatusColumn, tech_stackColumn, titleColumn, difficultyColumn } from "@modules/bugs/components/list-template/columns"
+import { bountyColumn, createdAtColumn, clientStatusColumn, techStackColumn, titleColumn, difficultyColumn } from "@modules/bugs/components/list-template/columns"
 import { EditBugDrawer } from "@modules/bugs/components/edit-bug"
 
 const columnHelper = createDataTableColumnHelper<Bug>()
@@ -28,7 +28,7 @@ const createColumns = (
   onDelete: (bug: Bug) => void
 ) => [
   titleColumn,
-  tech_stackColumn,
+  techStackColumn,
   createdAtColumn,
   bountyColumn,
   clientStatusColumn,
@@ -101,8 +101,14 @@ export default function MyBugs(props: MyBugsProps) {
 
   const limit = queryParams?.limit || 15
 
+  const handleEdit = (bug: Bug) => {
+    console.log("Editing bug:", bug)
+    setSelectedBug(bug)
+    setIsDrawerOpen(true)
+  }
+
   const columns = useMemo(() => createColumns(
-    (bug) => { setSelectedBug(bug); setIsDrawerOpen(true) },
+    handleEdit,
     (bug) => { /* trigger delete mutation */ }
   ), [])
 
@@ -203,6 +209,10 @@ export default function MyBugs(props: MyBugsProps) {
           onConfirm={handleClaimBug}
           onReviewSubmission={handleReviewSubmission}
           bug={selectedBug}
+          onEdit={handleEdit}
+          onDelete={(bug) => {
+            // trigger your delete mutation here, same as the list column
+          }}
         />
       )}
       {selectedBug && (
@@ -211,7 +221,7 @@ export default function MyBugs(props: MyBugsProps) {
           onClose={setIsDrawerOpen}
           bug={selectedBug}
         />
-      )}
+      )}      
     </div>
   )
 }

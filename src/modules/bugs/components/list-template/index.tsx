@@ -14,7 +14,7 @@ import {
   bountyColumn,
   createdAtColumn,
   descriptionColumn,
-  tech_stackColumn,
+  techStackColumn,
   titleColumn,
   difficultyColumn
 } from "./columns"
@@ -22,7 +22,7 @@ import {
 const defaultColumns = [
   titleColumn,
   descriptionColumn,
-  tech_stackColumn,
+  techStackColumn,
   createdAtColumn,
   bountyColumn,
   difficultyColumn,

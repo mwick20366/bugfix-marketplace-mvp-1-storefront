@@ -2,7 +2,7 @@
 
 import { clx } from "@medusajs/ui"
 import { ArrowRightOnRectangle } from "@medusajs/icons"
-import { useParams, usePathname } from "next/navigation"
+import { usePathname } from "next/navigation"
 
 import ChevronDown from "@modules/common/icons/chevron-down"
 import User from "@modules/common/icons/user"
@@ -12,10 +12,9 @@ import { Client, signoutClient } from "@lib/data/client"
 
 const AccountNav = () => {
   const route = usePathname()
-  const { countryCode } = useParams() as { countryCode: string }
 
   const handleLogout = async () => {
-    await signoutClient(countryCode)
+    await signoutClient()
   }
 
   const { clientData } = useClientMe()
@@ -26,9 +25,9 @@ const AccountNav = () => {
   return (
     <div>
       <div className="small:hidden" data-testid="mobile-account-nav">
-        {route !== `/${countryCode}/account` ? (
+        {route !== `/client/account` ? (
           <LocalizedClientLink
-            href="/account"
+            href="/client/account"
             className="flex items-center gap-x-2 text-small-regular py-2"
             data-testid="account-main-link"
           >
@@ -46,7 +45,7 @@ const AccountNav = () => {
               <ul>
                 <li>
                   <LocalizedClientLink
-                    href="/account/my-bugs"
+                    href="/client/account/my-bugs"
                     className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
                     data-testid="profile-link"
                   >
@@ -61,7 +60,7 @@ const AccountNav = () => {
                 </li>
                 <li>
                   <LocalizedClientLink
-                    href="/account/developer-submissions"
+                    href="/client/account/developer-submissions"
                     className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
                     data-testid="profile-link"
                   >
@@ -157,9 +156,8 @@ const AccountNavLink = ({
   children,
   "data-testid": dataTestId,
 }: AccountNavLinkProps) => {
-  const { countryCode }: { countryCode: string } = useParams()
-
-  const active = route.split(countryCode)[1] === href
+  const active = route === href
+  
   return (
     <LocalizedClientLink
       href={href}

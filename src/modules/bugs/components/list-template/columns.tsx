@@ -1,8 +1,9 @@
 "use client"
 
 import { Bug } from "@lib/data/bugs"
+import { StatusBadge, DifficultyBadge } from "@modules/common/components/bug-badges"
 import { convertToLocale } from "@lib/util/money"
-import { Badge, createDataTableColumnHelper } from "@medusajs/ui"
+import { createDataTableColumnHelper } from "@medusajs/ui"
 
 const columnHelper = createDataTableColumnHelper<Bug>()
 
@@ -36,7 +37,7 @@ export const descriptionColumn = columnHelper.accessor("description", {
   enableSorting: false,
 })
 
-export const tech_stackColumn = columnHelper.accessor("tech_stack", {
+export const techStackColumn = columnHelper.accessor("tech_stack", {
   header: "Tech Stack",
   enableSorting: false,
 })
@@ -81,43 +82,7 @@ export const developerStatusColumn = columnHelper.accessor("status", {
   sortLabel: "Status",
   sortAscLabel: "A-Z",
   sortDescLabel: "Z-A",
-  cell: ({ getValue }) => {
-    const status = getValue() as string
-
-    const getColor = (status: string) => {
-      switch (status) {
-        case "open":
-          return "green"
-        case "claimed":
-          return "blue"
-        case "fix submitted":
-          return "orange"
-        case "client approved":
-          return "purple"
-        case "client rejected":
-          return "red"
-        default:
-          return "grey"
-      }
-    }
-
-    const getLabel = (status: string) => {
-      switch (status) {
-        case "open": return "Open"
-        case "claimed": return "Claimed"
-        case "fix submitted": return "Fix Submitted"
-        case "client approved": return "Client Approved"
-        case "client rejected": return "Client Rejected"
-        default: return status
-      }
-    }
-
-    return (
-      <Badge color={getColor(status)} size="2xsmall" rounded="full">
-        {getLabel(status)}
-      </Badge>
-    )
-  },
+  cell: ({ getValue }) => <StatusBadge status={getValue() as string} />,
 })
 
 export const clientStatusColumn = columnHelper.accessor("status", {
@@ -128,40 +93,10 @@ export const clientStatusColumn = columnHelper.accessor("status", {
   sortDescLabel: "Z-A",
   cell: ({ getValue }) => {
     const status = getValue() as string
-
-    const getColor = (status: string) => {
-      switch (status) {
-        case "open":
-          return "green"
-        case "claimed":
-          return "blue"
-        case "fix submitted":
-          return "orange"
-        case "client approved":
-          return "purple"
-        case "client rejected":
-          return "red"
-        default:
-          return "grey"
-      }
-    }
-
-    const getLabel = (status: string) => {
-      switch (status) {
-        case "open": return "Open"
-        case "claimed": return "Claimed"
-        case "fix submitted": return "Fix Submitted"
-        case "client approved": return "Approved"
-        case "client rejected": return " Rejected"
-        default: return status
-      }
-    }
-
-    return (
-      <Badge color={getColor(status)} size="2xsmall" rounded="full">
-        {getLabel(status)}
-      </Badge>
-    )
+    const shortLabel =
+      status === "client approved" ? "Approved" :
+      status === "client rejected" ? "Rejected" : undefined
+    return <StatusBadge status={status} label={shortLabel} />
   },
 })
 
@@ -171,35 +106,5 @@ export const difficultyColumn = columnHelper.accessor("difficulty", {
   sortLabel: "Difficulty",
   sortAscLabel: "A-Z",
   sortDescLabel: "Z-A",
-  cell: ({ getValue }) => {
-    const difficulty = getValue() as string
-
-    const getColor = (difficulty: string) => {
-      switch (difficulty) {
-        case "easy":
-          return "green"
-        case "medium":
-          return "orange"
-        case "hard":
-          return "red"
-        default:
-          return "grey"
-      }
-    }
-
-    const getLabel = (difficulty: string) => {
-      switch (difficulty) {
-        case "easy": return "Easy"
-        case "medium": return "Medium"
-        case "hard": return "Hard"
-        default: return difficulty
-      }
-    }
-
-    return (
-      <Badge color={getColor(difficulty)} size="2xsmall" rounded="full">
-        {getLabel(difficulty)}
-      </Badge>
-    )
-  },
+  cell: ({ getValue }) => <DifficultyBadge difficulty={getValue() as string} />,
 })

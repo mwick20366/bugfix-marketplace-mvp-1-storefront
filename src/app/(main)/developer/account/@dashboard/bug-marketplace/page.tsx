@@ -16,11 +16,13 @@ type Params = {
 }
 
 export default async function Page(props: Params) {
-  const developer = await retrieveDeveloper().catch(() => null)
+  const developerData = await retrieveDeveloper().catch(() => null)
 
-  if (!developer) {
+  if (!developerData) {
     redirect(`/login?redirectTo=${encodeURIComponent(window.location.href)}`)
   }
+
+  const { developer } = developerData
 
   const searchParams = await props.searchParams
   const { limit, offset, sortId, sortDesc, q } = searchParams
@@ -38,6 +40,7 @@ export default async function Page(props: Params) {
       <div className="content-container" data-testid="cart-container">
         <OpenBugs
           {...openBugsParams}
+          isDeveloper={!!developer.id}
         />
       </div>
     </div>

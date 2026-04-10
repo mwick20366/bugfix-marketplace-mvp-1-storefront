@@ -1,10 +1,12 @@
 // src/components/bugs/bug-details-modal.tsx
 "use client"
 
-import { Button, Label } from "@medusajs/ui"
-import { Text as BugzapperText } from "@medusajs/ui"
+import { Button } from "@medusajs/ui"
 import { Bug } from "@lib/data/bugs"
-import Modal from "@modules/common/components/modal" // your custom Modal wrapper
+import Modal from "@modules/common/components/modal"
+import { DetailRow } from "@modules/marketplace/components/bug-details-modal"
+import { StatusBadge, DifficultyBadge } from "@modules/common/components/bug-badges"
+import React from "react"
 
 type BugDetailsModalProps = {
   bug: Bug | null
@@ -32,18 +34,11 @@ export const BugDetailsModal = ({
     <Modal isOpen={isOpen} close={onClose} size="medium">
       <Modal.Title>Bug Details</Modal.Title>
       <Modal.Body>
-        <div className="flex flex-col gap-y-4">
-          <div>
-            <Label size="small" weight="plus">Title</Label>
-            <BugzapperText>{bug.title}</BugzapperText>
-          </div>
-          <div>
-            <Label size="small" weight="plus">Description</Label>
-            <BugzapperText>{bug.description}</BugzapperText>
-          </div>
+        <div className="flex flex-col gap-y-2">
+          <DetailRow label="Title">{bug.title}</DetailRow>
+          <DetailRow label="Description">{bug.description}</DetailRow>
           {bug.repo_link && (
-            <div>
-              <Label size="small" weight="plus">Repository URL</Label>
+            <DetailRow label="Repository URL">
               <a
                 href={bug.repo_link}
                 target="_blank"
@@ -52,42 +47,36 @@ export const BugDetailsModal = ({
               >
                 {bug.repo_link}
               </a>
-            </div>
+            </DetailRow>
           )}
           {bug.tech_stack && (
-            <div>
-              <Label size="small" weight="plus">Tech Stack</Label>
-              <BugzapperText>{bug.tech_stack}</BugzapperText>
-            </div>
+            <DetailRow label="Tech Stack">{bug.tech_stack}</DetailRow>
           )}
-          <div>
-            <Label size="small" weight="plus">Bounty</Label>
-            <BugzapperText>${bug.bounty}</BugzapperText>
-          </div>
-          <div>
-            <Label size="small" weight="plus">Status</Label>
-            <BugzapperText>{bug.status}</BugzapperText>
-          </div>
+          <DetailRow label="Bounty">${bug.bounty}</DetailRow>
+          <DetailRow label="Difficulty">
+            <DifficultyBadge difficulty={bug.difficulty ?? ""} />
+          </DetailRow>
+          <DetailRow label="Status">
+            <StatusBadge status={bug.status ?? ""} />
+          </DetailRow>
         </div>
       </Modal.Body>
       <Modal.Footer>
-        <div className="flex items-center gap-x-2">
-          <Button
-            variant="secondary"
-            onClick={() => canUnclaim && onUnclaim(bug)}
-            disabled={!canUnclaim}
-            isLoading={isUnclaiming}
-          >
-            Unclaim
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => canSubmitFix && onSubmitFix(bug)}
-            disabled={!canSubmitFix}
-          >
-            Submit Fix
-          </Button>
-        </div>
+        <Button
+          variant="secondary"
+          onClick={() => canUnclaim && onUnclaim(bug)}
+          disabled={!canUnclaim}
+          isLoading={isUnclaiming}
+        >
+          Unclaim
+        </Button>
+        <Button
+          variant="primary"
+          onClick={() => canSubmitFix && onSubmitFix(bug)}
+          disabled={!canSubmitFix}
+        >
+          Submit Fix
+        </Button>
       </Modal.Footer>
     </Modal>
   )
