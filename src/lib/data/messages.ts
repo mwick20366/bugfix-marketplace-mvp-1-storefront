@@ -18,6 +18,18 @@ export type MessagesResponse = {
   messages: Message[]
 }
 
+export type MessageThread = {
+  id: string
+  title: string
+  status: string
+  developer?: { first_name: string }
+  client?: { first_name: string }
+}
+
+export type MessageThreadsResponse = {
+  bugs: MessageThread[]
+}
+
 export const listMessages = async ({
   bugId,
   order = "-created_at",
@@ -51,16 +63,36 @@ export const listMessages = async ({
   return result as MessagesResponse
 }
 
+export const listMessageThreads = async ({
+  unreadOnly = false,
+}: {
+  unreadOnly?: boolean
+}): Promise<MessageThreadsResponse | null> => {
+  const authHeaders = await getAuthHeaders()
+  if (!authHeaders) return null
+
+  const params = new URLSearchParams({
+    unread_only: String(unreadOnly),
+  })
+
+  const result = await sdk.client.fetch(
+    `/messages?${params.toString()}`,
+    {
+      headers: { ...authHeaders },
+      next: await getCacheOptions(`message-threads`),
+      cache: "force-cache",
+    }
+  )
+
+  return result as MessageThreadsResponse
+}
+
 export const sendMessage = async ({
   bugId,
   content,
-  sender_type,
-  sender_id,
 }: {
   bugId: string
   content: string
-  sender_type: "client" | "developer"
-  sender_id: string
 }): Promise<{ success: boolean; message?: Message; error?: string }> => {
   const authHeaders = await getAuthHeaders()
 
@@ -74,7 +106,7 @@ export const sendMessage = async ({
     .fetch(`/bugs/${bugId}/messages`, {
       method: "POST",
       headers,
-      body: { content, sender_type, sender_id },
+      body: { content },
     })
     .then(async (result: any) => {
       const messagesCacheTag = await getCacheTag(`messages-${bugId}`)
@@ -94,43 +126,35 @@ export const markMessagesRead = async ({
   actorType: "client" | "developer"
 }): Promise<{ success: boolean; error?: string }> => {
   const authHeaders = await getAuthHeaders()
-
   if (!authHeaders) return { success: false, error: "Not authenticated" }
 
   return sdk.client
-    .fetch(`/store/bugs/${bugId}/messages/mark-read`, {
+    .fetch(`/bugs/${bugId}/messages/mark-read`, {
       method: "POST",
       headers: { ...authHeaders },
+      body: { reader_type: actorType },
     })
     .then(async () => {
       const messagesCacheTag = await getCacheTag(`messages-${bugId}`)
       revalidateTag(messagesCacheTag)
+      // Also invalidate the global unread count
+      const globalCacheTag = await getCacheTag(`messages-unread`)
+      revalidateTag(globalCacheTag)
       return { success: true }
     })
     .catch((err) => ({ success: false, error: err.toString() }))
 }
 
 export const getUnreadCount = async ({
-  bugId,
-  senderId,
-  senderType,
-  actorType,
+  bugId
 }: {
   bugId: string
-  senderId: string
-  senderType: "client" | "developer"
-  actorType: "client" | "developer"
 }): Promise<number> => {
   const authHeaders = await getAuthHeaders()
   if (!authHeaders) return 0
 
-  const params = new URLSearchParams({
-    sender_id: senderId,
-    sender_type: senderType,
-  })
-
   const result = await sdk.client.fetch(
-    `/store/bugs/${bugId}/messages/unread?${params.toString()}`,
+    `/bugs/${bugId}/messages/unread`,
     {
       headers: { ...authHeaders },
       next: await getCacheOptions(`messages-${bugId}`),
@@ -141,28 +165,13 @@ export const getUnreadCount = async ({
   return (result as any).unread_count ?? 0
 }
 
-export const getGlobalUnreadCount = async ({
-  senderId,
-  senderType,
-}: {
-  senderId: string
-  senderType: "client" | "developer"
-}): Promise<number> => {
+export const getGlobalUnreadCount = async (): Promise<number> => {
   const authHeaders = await getAuthHeaders()
   if (!authHeaders) return 0
 
-  const params = new URLSearchParams({
-    sender_id: senderId,
-    sender_type: senderType,
-  })
-
   const result = await sdk.client.fetch(
-    `/store/messages/unread?${params.toString()}`,
-    {
-      headers: { ...authHeaders },
-      next: await getCacheOptions(`messages-unread-${senderId}`),
-      cache: "force-cache",
-    }
+    `/messages/unread`,
+    { headers: { ...authHeaders }, next: await getCacheOptions(`messages-unread`), cache: "force-cache" }
   )
 
   return (result as any).unread_count ?? 0

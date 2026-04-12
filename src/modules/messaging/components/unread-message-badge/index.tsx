@@ -6,16 +6,12 @@ import { useUnreadMessageCount } from "@lib/hooks/use-messages"
 
 type UnreadMessageBadgeProps = {
   bugId: string
-  currentUserId: string
-  currentUserType: "client" | "developer"
 }
 
 export default function UnreadMessageBadge({
   bugId,
-  currentUserId,
-  currentUserType,
 }: UnreadMessageBadgeProps) {
-  const { unreadCount } = useUnreadMessageCount(bugId, currentUserId, currentUserType)
+  const { unreadCount } = useUnreadMessageCount(bugId)
 
   if (!unreadCount) return null
 

@@ -15,6 +15,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import { useEffect, useMemo, useState } from "react"
 import SubmissionDetailsModal from "@modules/developer/components/submission-details-modal"
 import SubmissionsListTemplate from "@modules/submissions/components/list-template"
+import { useRouter, useSearchParams, usePathname } from "next/navigation"
 
 const columnHelper = createDataTableColumnHelper<Submission>()
 
@@ -30,7 +31,11 @@ type MySubmissionsProps = {
 }
 
 export default function MySubmissions(props: MySubmissionsProps) {
-  const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null)
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()  
+  
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
 
   const { developer } = props
@@ -92,14 +97,22 @@ export default function MySubmissions(props: MySubmissionsProps) {
     // Fetch data when component mounts or dependencies change
   }, [])
 
+  useEffect(() => {
+    const submissionId = searchParams.get("submissionId")
+    if (submissionId) {
+      setSelectedSubmissionId(submissionId)
+      setIsModalOpen(true)
+    }
+  }, [searchParams])
+
   const handleRowClicked = (submission: Submission) => {
-    setSelectedSubmission(submission)
+    setSelectedSubmissionId(submission.id)
     setIsModalOpen(true)
   }
 
   const handleCloseModal = () => {
     setIsModalOpen(false)
-    setSelectedSubmission(null)
+    setSelectedSubmissionId(null)
   }
 
   return (
@@ -124,7 +137,7 @@ export default function MySubmissions(props: MySubmissionsProps) {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         // onConfirm={handleClaimBug}
-        submission={selectedSubmission!}
+        submissionId={selectedSubmissionId || undefined}
       />
     </div>
   )

@@ -1,24 +1,40 @@
 "use client";
 
+import { sdk } from "@lib/config";
 import { Submission } from "@lib/data/submissions";
-import { Button, Heading, Label, Text as BugzapperText } from "@medusajs/ui";
+import { Button, Heading, Label, Text as BugzapperText, StatusBadge } from "@medusajs/ui";
 import Modal from "@modules/common/components/modal";
+import { useQuery } from "@tanstack/react-query";
 
 interface SubmissionDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm?: () => void;
-  submission: Submission; // Optional: show which submission is being claimed
+  submission?: Submission; // Optional: show which submission is being claimed
+  submissionId?: string; // Optional: if submission details are fetched via ID
 }
 
 export default function SubmissionDetailsModal({ 
   isOpen, 
   onClose = () => {}, 
   onConfirm = () => {},
-  submission,
+  submission: submissionProp,
+  submissionId,
 }: SubmissionDetailsModalProps) {
+
+  const { data: fetchedSubmissionData, isLoading } = useQuery<{ submission: Submission }>({
+    queryFn: () =>
+      sdk.client.fetch(`/submissions/${submissionId}`, {
+        method: "GET",
+      }),
+    queryKey: ["submission", submissionId],
+    enabled: !!submissionId && !submissionProp,
+  });
+
+  const submission = submissionProp ?? fetchedSubmissionData?.submission;
+
   return (
-    <Modal isOpen={isOpen} close={onClose}>
+    <Modal isOpen={isOpen && !!submission} close={onClose}>
       <Modal.Title>Submission Details</Modal.Title>
       <Modal.Body>
         <Heading level="h2">{submission?.bug?.title}</Heading>
@@ -42,7 +58,7 @@ export default function SubmissionDetailsModal({
         </div>
         <div className="flex flex-col gap-y-2">
           <Label>Status</Label>
-          <BugzapperText>{submission?.status}</BugzapperText>
+          <StatusBadge>{submission?.status}</StatusBadge>
         </div>
         {submission?.client_notes && (
           <div className="flex flex-col gap-y-2">

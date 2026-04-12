@@ -11,7 +11,22 @@ type Props = {
 
 const Login = ({ setCurrentView }: Props) => {
   const [message, formAction] = useActionState(
-    (prevState: unknown, formData: FormData) => loginDeveloper(prevState, formData),
+    (prevState: unknown, formData: FormData) => {
+      loginDeveloper(prevState, formData)
+        .then(() => {
+          // Handle successful login if needed
+          const params = new URLSearchParams(window.location.search)
+          const redirect = params.get("redirect")
+          if (redirect) {
+            window.location.href = redirect
+          }
+        }
+        ).catch((error) => {
+          // Handle error if needed
+          console.error("Login failed:", error);
+          return error.toString()
+        })
+    },
     null
   )
 

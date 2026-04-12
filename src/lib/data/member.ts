@@ -35,7 +35,5 @@ export const retrieveMember =
         cache: "force-cache",
       });
 
-      console.log("response", response)
-
       return response.developer || response.client || null;
   }

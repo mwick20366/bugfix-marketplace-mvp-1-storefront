@@ -1,7 +1,6 @@
 "use client"
 import { Bug, listBugs } from "@lib/data/bugs"
 import { Client } from "@lib/data/client"
-import { convertToLocale } from "@lib/util/money"
 import {
   createDataTableColumnHelper,
   DataTablePaginationState,
@@ -13,13 +12,13 @@ import {
 } from "@medusajs/ui"
 import { Pencil, Trash } from "@medusajs/icons"
 import BugsListTemplate from "@modules/bugs/components/list-template"
-import { keepPreviousData, QueryClient, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useMemo, useState } from "react"
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useEffect, useMemo, useState } from "react"
 import { useClaimBug } from "@lib/hooks/use-claim-bug"
 import ClientBugDetailsModal from "../bug-details-modal"
-import { title } from "process"
 import { bountyColumn, createdAtColumn, clientStatusColumn, techStackColumn, titleColumn, difficultyColumn, createMessagesColumn } from "@modules/bugs/components/list-template/columns"
 import { EditBugDrawer } from "@modules/bugs/components/edit-bug"
+import { useSearchParams, useRouter, usePathname } from "next/navigation"
 
 const columnHelper = createDataTableColumnHelper<Bug>()
 
@@ -85,7 +84,11 @@ type MyBugsProps = {
 }
 
 export default function MyBugs(props: MyBugsProps) {
-  const [selectedBug, setSelectedBug] = useState<Bug | null>(null)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+
+  const [selectedBugId, setSelectedBugId] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false)
 
@@ -104,8 +107,7 @@ export default function MyBugs(props: MyBugsProps) {
   const limit = queryParams?.limit || 15
 
   const handleEdit = (bug: Bug) => {
-    console.log("Editing bug:", bug)
-    setSelectedBug(bug)
+    setSelectedBugId(bug.id)
     setIsDrawerOpen(true)
   }
 
@@ -156,16 +158,30 @@ export default function MyBugs(props: MyBugsProps) {
   })
 
   const handleRowClicked = (bug: Bug) => {
-    setSelectedBug(bug)
+    setSelectedBugId(bug.id)
     setIsModalOpen(true)
   }
 
+  useEffect(() => {
+    const bugId = searchParams.get("bugId")
+    if (bugId) {
+      setSelectedBugId(bugId)
+      setIsModalOpen(true)
+    }
+  }, [searchParams])
+
   const handleCloseModal = () => {
     setIsModalOpen(false)
-    setSelectedBug(null)
+    setSelectedBugId(null)
+
+    // Remove bugId from URL without full page reload
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete("bugId")
+    const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname
+    router.replace(newUrl)
   }
 
-  const { mutate: claimBug } = useClaimBug(selectedBug?.id || "") 
+  const { mutate: claimBug } = useClaimBug(selectedBugId || "") 
 
   const queryClient = useQueryClient()
 
@@ -177,7 +193,7 @@ export default function MyBugs(props: MyBugsProps) {
         queryClient.invalidateQueries({ queryKey: ["bugs"] })
 
         setIsModalOpen(false)
-        setSelectedBug(null)
+        setSelectedBugId(null)
       },
       onError: (error) => {
         toast.error(`Failed to claim bug: ${error.message}`)
@@ -205,27 +221,27 @@ export default function MyBugs(props: MyBugsProps) {
         search={search}
         setSearch={setSearch}
       />
-      {selectedBug && (
+      {selectedBugId && (
         <ClientBugDetailsModal
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           onConfirm={handleClaimBug}
+          messageSectionHeight={300}
           onReviewSubmission={handleReviewSubmission}
-          bug={selectedBug}
+          bugId={selectedBugId}
           onEdit={handleEdit}
           onDelete={(bug) => {
             // trigger your delete mutation here, same as the list column
           }}
-          currentUserId={client.id}
         />
       )}
-      {selectedBug && (
+      {selectedBugId && (
         <EditBugDrawer
           isOpen={isDrawerOpen}
-          onClose={setIsDrawerOpen}
-          bug={selectedBug}
+          onClose={() => setIsDrawerOpen(false)}
+          bug={data?.response?.bugs.find((b) => b.id === selectedBugId)!}
         />
-      )}      
+      )}
     </div>
   )
 }

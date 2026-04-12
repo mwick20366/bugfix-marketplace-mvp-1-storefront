@@ -13,13 +13,14 @@ import {
 import { ArrowUturnLeft, PaperPlane } from "@medusajs/icons"
 import BugsListTemplate from "@modules/bugs/components/list-template"
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useMemo, useState } from "react"
-import { BugDetailsModal } from "@modules/developer/components/bug-details-modal"
+import { useEffect, useMemo, useState } from "react"
+import { DeveloperBugDetailsModal } from "@modules/developer/components/bug-details-modal"
 import { useDeveloperMe } from "@lib/hooks/use-developer-me"
 import { useUnclaimBug } from "@lib/hooks/use-unclaim-bug"
 import SubmitFixModal from "../submit-fix-modal"
 import { bountyColumn, convertDateToRelative, createMessagesColumn, developerStatusColumn, difficultyColumn, titleColumn } from "@modules/bugs/components/list-template/columns"
 import { Developer } from "@lib/data/developer"
+import { useSearchParams, useRouter, usePathname } from "next/navigation"
 
 const columnHelper = createDataTableColumnHelper<Bug>()
 
@@ -100,7 +101,11 @@ type MyBugsProps = {
 }
 
 export default function MyBugs({ statusFilter = [], difficultyFilter = [] }: MyBugsProps) {
-  const [selectedBug, setSelectedBug] = useState<Bug | null>(null)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+
+  const [selectedBugId, setSelectedBugId] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
   const [isSubmitFixOpen, setIsSubmitFixOpen] = useState(false)
 
@@ -110,13 +115,13 @@ export default function MyBugs({ statusFilter = [], difficultyFilter = [] }: MyB
   if (!developer) {
     return <div>Loading...</div>
   }
-  
+
   const limit = BUG_LIMIT
 
   const columns = useMemo(() => createColumns(
     developer,
-    (bug) => { setIsSubmitFixOpen(true); setSelectedBug(bug) },
-    (bug) => { setSelectedBug(bug); handleUnclaim(bug) },
+    (bug) => { setIsSubmitFixOpen(true); setSelectedBugId(bug.id) },
+    (bug) => { setSelectedBugId(bug.id); handleUnclaim(bug) },
   ), [])
 
   const [pagination, setPagination] = useState<DataTablePaginationState>({
@@ -155,12 +160,20 @@ export default function MyBugs({ statusFilter = [], difficultyFilter = [] }: MyB
     enabled: !!developer?.id,
   })
 
-  const { mutate: unclaimBug, isPending: isUnclaiming } = useUnclaimBug(selectedBug?.id || "")
+  const { mutate: unclaimBug, isPending: isUnclaiming } = useUnclaimBug(selectedBugId || "")
 
   const handleRowClicked = (bug: Bug) => {
-    setSelectedBug(bug)
+    setSelectedBugId(bug.id)
     setIsModalOpen(true)
   }
+
+  useEffect(() => {
+    const bugId = searchParams.get("bugId")
+    if (bugId) {
+      setSelectedBugId(bugId)
+      setIsModalOpen(true)
+    }
+  }, [searchParams])
 
   const queryClient = useQueryClient()
   const prompt = usePrompt()
@@ -181,7 +194,7 @@ export default function MyBugs({ statusFilter = [], difficultyFilter = [] }: MyB
         toast.success("Bug unclaimed successfully")
         queryClient.invalidateQueries({ queryKey: ["bugs"] })
         setIsModalOpen(false)
-        setSelectedBug(null)
+        setSelectedBugId(null)
       },
       onError: (error) => {
         toast.error(`Failed to unclaim bug: ${error.message}`)
@@ -196,7 +209,13 @@ export default function MyBugs({ statusFilter = [], difficultyFilter = [] }: MyB
 
   const handleCloseModal = () => {
     setIsModalOpen(false)
-    setSelectedBug(null)
+    setSelectedBugId(null)
+
+    // Remove bugId from URL without full page reload
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete("bugId")
+    const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname
+    router.replace(newUrl)
   }
 
   return (
@@ -208,7 +227,7 @@ export default function MyBugs({ statusFilter = [], difficultyFilter = [] }: MyB
         bugs={data?.response?.bugs || []}
         columns={columns as DataTableColumnDef<Bug>[]}
         rowCount={data ? data.response?.count : 0}
-        isLoading={isLoading}
+        isLoading={isLoading || isUnclaiming}
         onRowClick={handleRowClicked}
         pagination={pagination}
         setPagination={setPagination}
@@ -217,22 +236,21 @@ export default function MyBugs({ statusFilter = [], difficultyFilter = [] }: MyB
         search={search}
         setSearch={setSearch}
       />
-      {selectedBug && (
-        <BugDetailsModal
+      {selectedBugId && (
+        <DeveloperBugDetailsModal
           isOpen={isModalOpen}
           onClose={handleCloseModal}
-          bug={selectedBug}
+          bugId={selectedBugId}
           onSubmitFix={handleSubmitFix}
           onUnclaim={handleUnclaim}
           isUnclaiming={isUnclaiming}
-          currentUserId={developer?.id || ""}
         />
       )}
-      {selectedBug && (
+      {selectedBugId && (
         <SubmitFixModal
           isOpen={isSubmitFixOpen}
           onClose={() => setIsSubmitFixOpen(false)}
-          bug={selectedBug}
+          bugId={selectedBugId}
         />
       )}
     </div>

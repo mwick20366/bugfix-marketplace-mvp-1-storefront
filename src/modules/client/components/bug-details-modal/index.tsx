@@ -1,47 +1,65 @@
 "use client";
 
+import { sdk } from "@lib/config";
 import { Bug } from "@lib/data/bugs";
-import { markMessagesRead } from "@lib/data/messages";
+import { useMarkMessagesRead } from "@lib/hooks/use-messages";
 import { Button, Tooltip } from "@medusajs/ui";
 import { DifficultyBadge, StatusBadge } from "@modules/common/components/bug-badges";
 import Modal from "@modules/common/components/modal";
 import { DetailRow } from "@modules/marketplace/components/bug-details-modal";
 import MessageThread from "@modules/messaging/components/message-thread";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 
-interface BugDetailsModalProps {
+interface ClientBugDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  bug: Bug;
+  messageSectionHeight?: number;
+  bug?: Bug;
+  bugId?: string;
   onReviewSubmission?: () => void;
   onEdit: (bug: Bug) => void;
   onDelete: (bug: Bug) => void;
-  currentUserId: string;
 }
 
 export default function ClientBugDetailsModal({
   isOpen,
   onClose,
   onConfirm,
-  bug,
+  messageSectionHeight,
+  bug: bugProp,
+  bugId,
   onReviewSubmission,
   onEdit,
   onDelete,
-  currentUserId,
-}: BugDetailsModalProps) {
-    useEffect(() => {
-      if (isOpen && bug?.id && (bug.status === "claimed" || bug.status === "fix submitted")) {
-        markMessagesRead({ bugId: bug.id, actorType: "client" }) // or "developer"
-      }
-    }, [isOpen, bug?.id])
+}: ClientBugDetailsModalProps) {
+  // Fetch bug by ID only if no bug object was passed directly
+  const { data: fetchedBugData, isLoading } = useQuery<{ bug: Bug }>({
+    queryFn: () =>
+      sdk.client.fetch(`/bugs/${bugId}`, {
+        method: "GET",
+      }),
+    queryKey: ["bug", bugId],
+    enabled: !!bugId && !bugProp,
+  });
+
+  const bug = bugProp ?? fetchedBugData?.bug;
+
+  const { mutate: markRead } = useMarkMessagesRead(bug?.id || bugId || "", "client")
+
+  useEffect(() => {
+    if (isOpen && (bug?.id || bugId) && (bug?.status === "claimed" || bug?.status === "fix submitted")) {
+      markRead()
+    }
+  }, [isOpen, bug?.id, bug?.status])
 
   const canDelete = bug?.status === "open";
 
   const deleteButton = (
     <Button
       variant="danger"
-      onClick={() => canDelete && onDelete(bug)}
+      onClick={() => canDelete && onDelete(bug?.id ? bug : { ...bug, id: bugId } as Bug)}
       disabled={!canDelete}
     >
       Delete
@@ -49,7 +67,7 @@ export default function ClientBugDetailsModal({
   );
 
   return (
-    <Modal isOpen={isOpen} close={onClose} size="large">
+    <Modal isOpen={isOpen && !!bug} close={onClose} size="large">
       <Modal.Title>Bug Details</Modal.Title>
       <Modal.Body>
         <div className="flex flex-col gap-y-2">
@@ -87,14 +105,15 @@ export default function ClientBugDetailsModal({
             </DetailRow>
           )}
         </div>
-        {(bug.status === "claimed" || bug.status === "fix submitted") && (
-          <div className="mt-4 border-t pt-4">
+        {(bug?.status === "claimed" || bug?.status === "fix submitted") && (
+          <div className="mt-4 border-t pt-4 flex flex-col" style={{ height: `${messageSectionHeight || 333}px` }}>
             <p className="text-sm font-semibold mb-2">Messages</p>
-            <MessageThread
-              bugId={bug.id}
-              currentUserId={currentUserId}
-              currentUserType="client"
-            />
+            <div className="flex-1 overflow-hidden">
+              <MessageThread
+                bugId={bug?.id || bugId || ""}
+                currentUserId={bug?.client?.id || ""}
+              />
+            </div>
           </div>
         )}
       </Modal.Body>
@@ -103,7 +122,7 @@ export default function ClientBugDetailsModal({
         <div className="flex items-center gap-x-2 mr-auto">
           <Button
             variant="primary"
-            onClick={() => onEdit(bug)}
+            onClick={() => onEdit(bug?.id ? bug : { ...bug, id: bugId } as Bug)}
           >
             Edit
           </Button>

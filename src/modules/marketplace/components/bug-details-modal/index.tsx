@@ -26,31 +26,35 @@ export default function MarketplaceBugDetailsModal({
   isOpen,
   onClose,
   bug,
-  isDeveloper = false,
 }: MarketplaceBugDetailsModalProps) {
   const [isConfirming, setIsConfirming] = useState(false);
-  const { mutate: claimBug, isPending: isClaiming } = useClaimBug(bug?.id);
+  // const { mutate: claimBug, isPending: isClaiming } = useClaimBug(bug?.id);
 
   const queryClient = useQueryClient()
 
-  const handleClaimBug = () => {
-    claimBug(undefined, {
-      onSuccess: () => {
-        toast.success("Bug claimed successfully");
-        setIsConfirming(false);
+  // const handleClaimBug = () => {
+  //   claimBug(undefined, {
+  //     onSuccess: () => {
+  //       toast.success("Bug claimed successfully");
+  //       setIsConfirming(false);
 
-        queryClient.invalidateQueries({ queryKey: ["bugs"] })
-        queryClient.invalidateQueries({ queryKey: ["my-bugs"] })
-        queryClient.invalidateQueries({ queryKey: ["my-submissions"] })
-        queryClient.invalidateQueries({ queryKey: ["developer-me"] })
+  //       queryClient.invalidateQueries({ queryKey: ["bugs"] })
+  //       queryClient.invalidateQueries({ queryKey: ["my-bugs"] })
+  //       queryClient.invalidateQueries({ queryKey: ["my-submissions"] })
+  //       queryClient.invalidateQueries({ queryKey: ["developer-me"] })
 
-        onClose();
-      },
-      onError: (error) => {
-        toast.error(`Failed to claim bug: ${error.message}`);
-      },
-    });
-  };
+  //       onClose();
+  //     },
+  //     onError: (error) => {
+  //       toast.error(`Failed to claim bug: ${error.message}`);
+  //     },
+  //   });
+  // };
+
+  const handleClaimClick = () => {
+    const redirect = encodeURIComponent("/developer/account/bug-marketplace?status=open&bugId=" + bug.id)
+    window.location.href = `/developer/account?redirect=${redirect}`
+  }
 
   const handleClose = () => {
     setIsConfirming(false);
@@ -61,54 +65,23 @@ export default function MarketplaceBugDetailsModal({
     <Modal isOpen={isOpen} close={handleClose} size="medium">
       <Modal.Title>Bug Details</Modal.Title>
       <Modal.Body>
-        {isConfirming ? (
-          <div className="flex flex-col gap-y-2">
-            <p className="text-sm font-semibold">Claim this bug?</p>
-            <p className="text-sm text-ui-fg-subtle">
-              You are about to claim this bug. Once claimed, it will be removed
-              from the marketplace and assigned to you.
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-y-2">
-            <DetailRow label="Title">{bug?.title}</DetailRow>
-            <DetailRow label="Description">{bug?.description}</DetailRow>
-            <DetailRow label="Repo">
-              <a href={bug?.repo_link} className="text-blue-600 underline" target="_blank" rel="noreferrer">
-                {bug?.repo_link}
-              </a>
-            </DetailRow>
-            <DetailRow label="Bounty">${bug?.bounty}</DetailRow>
-            <DetailRow label="Difficulty">
-              <DifficultyBadge difficulty={bug?.difficulty ?? ""} />
-            </DetailRow>
-            <DetailRow label="Status">
-              <StatusBadge status={bug?.status ?? ""} />
-            </DetailRow>
-          </div>
-        )}
+        <div className="flex flex-col gap-y-2">
+          <DetailRow label="Title">{bug?.title}</DetailRow>
+          <DetailRow label="Description">{bug?.description}</DetailRow>
+          <DetailRow label="Bounty">${bug?.bounty}</DetailRow>
+          <DetailRow label="Difficulty">
+            <DifficultyBadge difficulty={bug?.difficulty ?? ""} />
+          </DetailRow>
+        </div>
       </Modal.Body>
-
-      {isDeveloper && (
-        <Modal.Footer>
-          {isConfirming ? (
-            <Button
-              variant="primary"
-              onClick={handleClaimBug}
-              isLoading={isClaiming}
-            >
-              Continue
-            </Button>
-          ) : (
-            <Button
-              variant="primary"
-              onClick={() => setIsConfirming(true)}
-            >
-              Claim Bug
-            </Button>
-          )}
-        </Modal.Footer>
-      )}
+      <Modal.Footer>
+        <Button
+          variant="primary"
+          onClick={handleClaimClick}
+        >
+          Login or Register to Claim!
+        </Button>
+      </Modal.Footer>
     </Modal>
   );
 }

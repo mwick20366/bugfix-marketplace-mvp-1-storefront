@@ -2,11 +2,23 @@
 "use client"
 
 import { useDeveloperNotifications, useMarkNotificationRead } from "@lib/hooks/use-notifications"
-import Link from "next/link"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 export default function DeveloperNotificationsPage() {
   const { data, isLoading } = useDeveloperNotifications({ order: "-created_at" })
   const { mutate: markRead } = useMarkNotificationRead("developer")
+
+  const notificationLink = (n: any) => {
+    if (n.resource_type === "bug") {
+      return `/developer/account/my-bugs?bugId=${n.resource_id}`
+    }
+
+    if (n.resource_type === "submission") {
+      return `/developer/account/my-submissions?submissionId=${n.resource_id}`
+    }
+
+    return n.resource_url || "#"
+  }
 
   return (
     <div className="py-12">
@@ -33,14 +45,14 @@ export default function DeveloperNotificationsPage() {
               <p className="text-ui-fg-muted text-xs">
                 {new Date(n.created_at).toDateString()}
               </p>
-              {n.resource_url && (
-                <Link
-                  href={n.resource_url}
+              {n.resource_id && (
+                <LocalizedClientLink
+                  href={notificationLink(n)}
                   className="text-ui-fg-interactive text-xs"
                   onClick={() => !n.is_read && markRead(n.id)}
                 >
                   View details →
-                </Link>
+                </LocalizedClientLink>
               )}
             </div>
             {!n.is_read && (

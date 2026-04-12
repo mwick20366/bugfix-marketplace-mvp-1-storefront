@@ -1,7 +1,8 @@
 "use client";
 import { FormProvider, Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Bug, createBug } from "@lib/data/bugs";
+import { Bug } from "@lib/data/bugs";
+import { sdk } from "@lib/config";
 import {
   Button,
   Heading,
@@ -13,33 +14,47 @@ import Input from "@modules/common/components/input"
 import { useSubmitFix } from "@lib/hooks/use-submit-fix";
 import Modal from "@modules/common/components/modal";
 import { submitFixSchema, SubmitFixSchema } from "./validators";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 
 interface SubmitFixModalProps {
   isOpen: boolean;
   onClose: () => void;
   onFixSubmitted?: () => void;
-  bug: Bug; // Optional: show which bug is being claimed
+  bug?: Bug;      // optional — used when opened with a full bug object
+  bugId?: string; // optional — used when opened with only an ID
 }
 
 export default function SubmitFixModal({ 
   isOpen, 
-  onClose, 
-  bug,
+  onClose,
+  bug: bugProp,
+  bugId,
   onFixSubmitted,
 }: SubmitFixModalProps) {
   const form = useForm<SubmitFixSchema>({
     resolver: zodResolver(submitFixSchema),
     mode: "onChange",
     defaultValues: {
-        notes: "",
-        file_url: "",
+      notes: "",
+      file_url: "",
     },
   })
 
   const queryClient = useQueryClient();
 
-  const { mutate: submitFix, isPending } = useSubmitFix(bug?.id, {
+  // Fetch bug by ID only if no bug object was passed directly
+  const { data: fetchedBugData, isLoading } = useQuery<{ bug: Bug }>({
+    queryFn: () =>
+      sdk.client.fetch(`/marketplace/bugs/${bugId}`, {
+        method: "GET",
+      }),
+    queryKey: ["bug", bugId],
+    enabled: !!bugId && !bugProp,
+  });
+
+  const bug = bugProp ?? fetchedBugData?.bug;
+
+  const { mutate: submitFix, isPending } = useSubmitFix(bug?.id || "", {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-bugs"] })
       queryClient.invalidateQueries({ queryKey: ["my-submissions"] })
@@ -63,9 +78,15 @@ export default function SubmitFixModal({
       <FormProvider {...form}>
         <form onSubmit={handleSubmit} className="flex h-full flex-col overflow-hidden">
           <Modal.Body>
-            <Heading level="h2">{bug?.title}</Heading>
-            <BugzapperText>{bug?.description}</BugzapperText>
-            <BugzapperText>Bounty: {bug?.bounty}</BugzapperText>
+            {isLoading ? (
+              <span className="text-sm">Loading...</span>
+            ) : (
+              <>
+                <Heading level="h2">{bug?.title}</Heading>
+                <BugzapperText>{bug?.description}</BugzapperText>
+                <BugzapperText>Bounty: {bug?.bounty}</BugzapperText>
+              </>
+            )}
             <Controller
               control={form.control}
               name="notes"
@@ -93,7 +114,7 @@ export default function SubmitFixModal({
                 variant="primary"
                 onClick={handleSubmit}
                 isLoading={isPending}
-                disabled={!form.formState.isValid || isPending}
+                disabled={!form.formState.isValid || isPending || isLoading || !bug}
               >
                 Submit Fix
               </Button>

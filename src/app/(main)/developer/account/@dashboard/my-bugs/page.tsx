@@ -14,7 +14,6 @@ export default async function Page() {
     <div className="py-12">
       <div className="content-container" data-testid="cart-container">
         <BugMarketplaceView />
-        {/* <MyBugs /> */}
       </div>
     </div>
   )

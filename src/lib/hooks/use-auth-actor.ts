@@ -36,9 +36,6 @@ export const useAuthActor = () => {
     // no-op
   })
 
-  console.log("actorId", actorId)
-  console.log("actorType", actorType)
-
   return {
     actorId,
     actorType,

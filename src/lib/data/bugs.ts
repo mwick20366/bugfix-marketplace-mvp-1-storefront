@@ -48,9 +48,6 @@ export const retrieveBug =
     return await sdk.client
       .fetch<{ bug: Bug }>(`/bugs/${id}`, {
         method: "GET",
-        // query: {
-        //   fields: "*orders",
-        // },
         headers,
         next,
         cache: "force-cache",
@@ -102,7 +99,48 @@ export const listBugs = async ({
       }
     )
     .then(({ bugs, count }) => {
-      console.log("Fetched bugs:", bugs)
+      return {
+        response: {
+          bugs,
+          count,
+        },
+        queryParams,
+      }
+    })
+}
+
+export const listMarketplaceBugs = async ({
+  queryParams,
+}: {
+  queryParams?: HttpTypes.FindParams & {
+    q?: string
+    difficulty?: string | string[]
+  }
+  sortBy?: SortOptions
+}): Promise<{
+  response: { bugs: Bug[]; count: number }
+  queryParams?: HttpTypes.FindParams & {
+    q?: string
+    difficulty?: string | string[]
+  }
+}> => {
+  const next = {
+    ...(await getCacheOptions("marketplace-bugs")),
+  }
+
+  return sdk.client
+    .fetch<{ bugs: Bug[]; count: number }>(
+      `/marketplace/bugs`,
+      {
+        method: "GET",
+        query: {
+          ...queryParams,
+        },
+        next,
+        cache: "no-store",
+      }
+    )
+    .then(({ bugs, count }) => {
       return {
         response: {
           bugs,

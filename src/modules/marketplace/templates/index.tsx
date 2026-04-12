@@ -4,7 +4,7 @@ import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-g
 import RefinementList from "@modules/marketplace/components/refinement-list"
 import { SortOptions } from "@modules/marketplace/components/refinement-list/sort-bugs"
 
-import PaginatedBugs from "../components/open-bugs"
+import PaginatedBugs from "../../developer/components/open-bugs"
 
 const MarketplaceTemplate = ({
   sortBy,

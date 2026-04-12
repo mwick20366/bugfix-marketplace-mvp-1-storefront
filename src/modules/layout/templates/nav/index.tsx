@@ -23,8 +23,6 @@ export default async function Nav() {
   const isLoggedIn = Boolean(developerData || clientData)
   const isDeveloper = Boolean(developerData)
 
-  const currentUserId = developerData?.developer.id || clientData?.client.id || ""
-  
   const displayName =
     developerData?.developer.first_name ||
     clientData?.client.contact_first_name ||
@@ -90,7 +88,6 @@ export default async function Nav() {
             {isLoggedIn && (
               <div className="flex items-center gap-x-4">
                 <GlobalMessageIcon
-                  currentUserId={currentUserId}
                   currentUserType={isDeveloper ? "developer" : "client"}
                 />
                 {isDeveloper ? (

@@ -1,6 +1,6 @@
 import { Bug } from "@lib/data/bugs"
 import { retrieveDeveloper } from "@lib/data/developer"
-import OpenBugs from "@modules/marketplace/components/open-bugs"
+import OpenBugs from "@modules/developer/components/open-bugs"
 import { redirect } from "next/navigation"
 
 const BUG_LIMIT = 15

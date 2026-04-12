@@ -65,14 +65,7 @@ export const retrieveDeveloper =
         cache: "force-cache",
       })
 
-      console.log("Fetched developer data:", result) // Debug log to check fetched data
-
       return result as DeveloperData
-      // .then(({ data }) => {
-      //   console.log("Fetched developer data:", data) // Debug log to check fetched data
-      //   return data
-      // })
-      // .catch(() => null)
   }
 
 export async function signupDeveloper(_currentState: unknown, formData: FormData) {

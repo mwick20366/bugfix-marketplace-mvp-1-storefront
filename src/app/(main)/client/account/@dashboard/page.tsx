@@ -1,6 +1,4 @@
 "use client"
-import { Container } from "@medusajs/ui"
-import { retrieveClient } from "@lib/data/client"
 import { useQuery } from "@tanstack/react-query"
 import StatCard from "@modules/dashboard/components/stat-card"
 
@@ -10,10 +8,6 @@ export default function ClientDashboardPage() {
     // TODO: switch to sdk call
     queryFn: () => fetch("/clients/me").then((res) => res.json()),
   })
-  // const data = await retrieveClient().catch(() => null)
-
-  console.log("Client Dashboard Data:", data) // Debugging log
-
   const dashboard = data?.dashboard
   const client = data?.client
 

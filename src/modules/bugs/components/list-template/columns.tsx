@@ -127,8 +127,6 @@ export const createMessagesColumn = (
       return (
         <UnreadMessageBadge
           bugId={bug.id}
-          currentUserId={currentUserId}
-          currentUserType={currentUserType}
         />
       )
     },

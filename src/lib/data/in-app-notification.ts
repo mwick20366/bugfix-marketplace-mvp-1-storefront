@@ -7,6 +7,8 @@ import { revalidateTag } from "next/dist/server/web/spec-extension/revalidate"
 export type InAppNotification = {
   id: string
   message: string
+  resource_id?: string
+  resource_type?: string
   resource_url?: string
   is_read: boolean
   created_at: string

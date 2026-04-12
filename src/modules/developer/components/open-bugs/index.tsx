@@ -1,12 +1,13 @@
 "use client"
+import { useSearchParams, useRouter, usePathname } from "next/navigation"
+import { useEffect } from "react"
 import { Bug, listBugs } from "@lib/data/bugs"
 import { DataTablePaginationState, DataTableSortingState, DataTableColumnDef } from "@medusajs/ui"
-import ClaimBugModal from "@modules/developer/components/claim-bug-modal"
 import BugsListTemplate from "@modules/bugs/components/list-template"
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import { useMemo, useState } from "react"
-import MarketplaceBugDetailsModal from "../bug-details-modal"
 import { bountyColumn, createdAtColumn, difficultyColumn, techStackColumn, titleColumn } from "@modules/bugs/components/list-template/columns"
+import OpenBugsDetailsModal from "../open-bugs-details-modal"
 
 const BUG_LIMIT = 15
 
@@ -14,30 +15,27 @@ type BugsProps = {
   limit?: number,
   offset?: number,
   q?: string,
-  // status?: string,
   isDeveloper?: boolean,
   client_id?: string,
   sortId: string,
   sortDesc: boolean,
-  //onRowClick?: (bug: Bug) => void,
   showStatus?: boolean,
 }
 
 export default function OpenBugs(props: BugsProps) {
-  const [selectedBug, setSelectedBug] = useState<Bug | null>(null)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+
+  const [selectedBugId, setSelectedBugId] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
 
   const {
     limit = BUG_LIMIT,
-    // offset = 0,
-    q = "",
-    // status,
     isDeveloper,
     client_id,
     sortId,
     sortDesc,
-    // onRowClick,
-    showStatus,
   } = props
 
   const [pagination, setPagination] = useState<DataTablePaginationState>({
@@ -89,19 +87,33 @@ export default function OpenBugs(props: BugsProps) {
     placeholderData: keepPreviousData,
   })
 
+  useEffect(() => {
+    const bugId = searchParams.get("bugId")
+    if (bugId) {
+      setSelectedBugId(bugId)
+      setIsModalOpen(true)
+    }
+  }, [searchParams])
+
   const handleRowClicked = (bug: Bug) => {
-    setSelectedBug(bug)
+    setSelectedBugId(bug.id)
     setIsModalOpen(true)
   }
 
   const handleCloseModal = () => {
     setIsModalOpen(false)
-    setSelectedBug(null)
+    setSelectedBugId(null)
+
+    // Remove bugId from URL without full page reload
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete("bugId")
+    const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname
+    router.replace(newUrl)
   }
 
   const handleClaimBug = async () => {
     setIsModalOpen(false)
-    setSelectedBug(null)
+    setSelectedBugId(null)
   }
 
   return (
@@ -122,11 +134,11 @@ export default function OpenBugs(props: BugsProps) {
         search={search}
         setSearch={setSearch}
       />
-      {selectedBug && (
-        <MarketplaceBugDetailsModal
+      {selectedBugId && (
+        <OpenBugsDetailsModal
           isOpen={isModalOpen}
           onClose={handleCloseModal}
-          bug={selectedBug}
+          bugId={selectedBugId}
           isDeveloper={isDeveloper}
         />
       )}

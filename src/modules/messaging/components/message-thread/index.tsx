@@ -8,7 +8,6 @@ import { useForm } from "react-hook-form"
 type MessageThreadProps = {
   bugId: string
   currentUserId: string
-  currentUserType: "client" | "developer"
 }
 
 type MessageForm = {
@@ -17,8 +16,7 @@ type MessageForm = {
 
 export default function MessageThread({
   bugId,
-  currentUserId,
-  currentUserType,
+  currentUserId
 }: MessageThreadProps) {
   const { messages, isLoading } = useMessages(bugId)
   const { mutate: send, isPending: isSending } = useSendMessage(bugId)
@@ -32,8 +30,8 @@ export default function MessageThread({
 
   // SSE for real-time updates
   useEffect(() => {
-    const source = new EventSource(
-      `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/bugs/${bugId}/messages/subscribe`
+   const source = new EventSource(
+      `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/bugs/${bugId}/messages/subscribe`
     )
 
     source.onmessage = () => {
@@ -51,7 +49,7 @@ export default function MessageThread({
 
   const onSubmit = ({ content }: MessageForm) => {
     send(
-      { content, sender_type: currentUserType, sender_id: currentUserId },
+      { content },
       { onSuccess: () => reset() }
     )
   }
@@ -60,7 +58,7 @@ export default function MessageThread({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
         {messages.length === 0 && (
           <p className="text-sm text-ui-fg-subtle text-center">
             No messages yet. Start the conversation!
