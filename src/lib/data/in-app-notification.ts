@@ -17,39 +17,70 @@ export type InAppNotification = {
 export type NotificationsResponse = {
   notifications: InAppNotification[]
   unread_count: number
+  count: number
 }
 
 export const retrieveNotifications = async ({
   actorType,
   order = "-created_at",
+  limit = 15,
+  offset = 0,
 }: {
   actorType: "client" | "developer"
   order?: string
+  limit?: number
+  offset?: number
 }): Promise<NotificationsResponse | null> => {
   const authHeaders = await getAuthHeaders()
-
   if (!authHeaders) return null
 
-  const headers = {
-    ...authHeaders,
-  }
-
-  const next = {
-    ...(await getCacheOptions(`${actorType}-notifications`)),
-  }
-
-  const params = new URLSearchParams({ order })
+  const params = new URLSearchParams({ order, limit: String(limit), offset: String(offset) })
 
   const result = await sdk.client.fetch(
     `/${actorType}s/me/notifications?${params.toString()}`,
     {
-      headers,
-      next,
+      headers: { ...authHeaders },
       cache: "no-store",
     }
   )
 
   return result as NotificationsResponse
+}
+
+export const deleteNotification = async ({
+  id,
+  actorType,
+}: {
+  id: string
+  actorType: "client" | "developer"
+}): Promise<{ success: boolean }> => {
+  const authHeaders = await getAuthHeaders()
+  if (!authHeaders) return { success: false }
+
+  return sdk.client
+    .fetch(`/${actorType}s/me/notifications/${id}`, {
+      method: "DELETE",
+      headers: { ...authHeaders },
+    })
+    .then(() => ({ success: true }))
+    .catch(() => ({ success: false }))
+}
+
+export const deleteAllNotifications = async ({
+  actorType,
+}: {
+  actorType: "client" | "developer"
+}): Promise<{ success: boolean }> => {
+  const authHeaders = await getAuthHeaders()
+  if (!authHeaders) return { success: false }
+
+  return sdk.client
+    .fetch(`/${actorType}s/me/notifications`, {
+      method: "DELETE",
+      headers: { ...authHeaders },
+    })
+    .then(() => ({ success: true }))
+    .catch(() => ({ success: false }))
 }
 
 export const markAsRead =

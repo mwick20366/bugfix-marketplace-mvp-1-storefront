@@ -1,9 +1,12 @@
-import { retrieveDeveloperBugs } from "@lib/data/bugs"
 import { retrieveDeveloper } from "@lib/data/developer"
+import { getPageMetadata } from "@modules/common/functions/metadata"
 import MySubmissions from "@modules/developer/components/my-submissions"
-// import BugsList from "@modules/marketplace/components/open-bugs"
-// import { useState } from "react"
 import { redirect } from "next/navigation"
+
+export async function generateMetadata() {
+  const { metadata } = await getPageMetadata("My Submissions")
+  return metadata
+}
 
 const SUBMISSIONS_LIMIT = 15
 
@@ -18,6 +21,8 @@ type Params = {
 }
 
 export default async function Page(props: Params) {
+  const { Sync } = await getPageMetadata("My Submissions")
+
   const developerData = await retrieveDeveloper().catch(() => null)
   const { developer } = developerData || {}
 
@@ -35,22 +40,17 @@ export default async function Page(props: Params) {
     developer: developer
   }
 
-  // const queryFn = async (params: { limit: number; offset: number; search: string; sorting: any }) => {
-  //   const bugs = await retrieveDeveloperBugs(developer.id)
-  //   return {
-  //     bugs: bugs || [],
-  //     count: bugs?.length || 0,
-  //   }
-  // }
-
   return (
-    <div className="py-12">
-      <div className="content-container" data-testid="cart-container">
-        <MySubmissions
-          queryParams={submissionsListQueryParams}
-          developer={developer}
-        />
+    <>
+      {Sync}
+      <div className="py-12">
+        <div className="content-container" data-testid="cart-container">
+          <MySubmissions
+            queryParams={submissionsListQueryParams}
+            developer={developer}
+          />
+        </div>
       </div>
-    </div>
+    </>
   )
 }

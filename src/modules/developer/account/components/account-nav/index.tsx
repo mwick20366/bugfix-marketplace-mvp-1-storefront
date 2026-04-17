@@ -1,7 +1,7 @@
 "use client"
 
 import { clx } from "@medusajs/ui"
-import { ArrowRightOnRectangle, BugAntSolid, PaperPlane, ChatBubbleLeftRight, BellAlert, User } from "@medusajs/icons"
+import { ArrowRightOnRectangle, BugAntSolid, PaperPlane, ChatBubbleLeftRight, BellAlert, User, StarSolid } from "@medusajs/icons"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
 
@@ -53,6 +53,12 @@ const AccountNav = () => {
       label: "Notifications",
       icon: <BellAlert className={ICON_SIZE} />,
       testId: "notifications-link",
+    },
+    {
+      href: "/developer/account/my-reviews",
+      label: "My Reviews",
+      icon: <StarSolid className={ICON_SIZE} />,
+      testId: "my-reviews-link",
     },
   ]
 

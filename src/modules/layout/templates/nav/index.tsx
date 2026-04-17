@@ -9,28 +9,36 @@ import { retrieveDeveloper } from "@lib/data/developer"
 import ProfileDropdownWrapper from "@modules/layout/components/profile-dropdown/logout-wrapper"
 import { ClientNotificationBell, DeveloperNotificationBell } from "@modules/layout/components/notification-bell/notification-bell-wrapper"
 import GlobalMessageIcon from "@modules/messaging/components/global-message-icon"
+import { getActorType } from "@modules/common/functions/get-actor-type"
 
 export default async function Nav() {
-  const [regions, locales, currentLocale] = await Promise.all([
-    listRegions().then((regions: StoreRegion[]) => regions),
-    listLocales(),
-    getLocale(),
-  ])
+  const actorType: "client" | "developer" | null = await getActorType()
 
-  const developerData = await retrieveDeveloper().catch(() => null)
-  const clientData = await retrieveClient().catch(() => null)
+  let displayName = "User"
 
-  const isLoggedIn = Boolean(developerData || clientData)
-  const isDeveloper = Boolean(developerData)
+  if (actorType === "developer") {
+    const developerData = await retrieveDeveloper().catch(() => null)
+    displayName = developerData?.developer.first_name || "Developer"
+  } else if (actorType === "client") {
+    const clientData = await retrieveClient().catch(() => null)
+    displayName = clientData?.client.contact_first_name || "Client"
+  }
+  const isLoggedIn = Boolean(actorType)
+  const isDeveloper = actorType === "developer"
 
-  const displayName =
-    developerData?.developer.first_name ||
-    clientData?.client.contact_first_name ||
-    "User"
+  // const displayName =
+  //   developerData?.developer.first_name ||
+  //   clientData?.client.contact_first_name ||
+  //   "User"
 
   let marketplaceLink = "/marketplace/bugs"
-  if (isDeveloper) {
-    marketplaceLink = "/developer/account/bug-marketplace"
+
+  if (isLoggedIn) {
+    if (isDeveloper) {
+      marketplaceLink = "/developer/account/bug-marketplace?status=open"
+    } else {
+      marketplaceLink = "/client/account/bug-marketplace"
+    }  
   }
 
   return (

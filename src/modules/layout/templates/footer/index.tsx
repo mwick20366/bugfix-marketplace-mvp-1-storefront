@@ -1,27 +1,11 @@
 import { Text } from "@medusajs/ui"
-import { cookies } from "next/headers"
-import { jwtDecode } from "jwt-decode"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { getActorType } from "@modules/common/functions/get-actor-type"
 import BugzapperCTA from "@modules/layout/components/medusa-cta"
 
-export default async function FooterTemp() {
-  let actorType: "client" | "developer" | null = null
-
-  try {
-    const cookieStore = cookies()
-    // Adjust the cookie/header name to match how your app stores the JWT
-    const token = (await cookieStore).get("_medusa_jwt")?.value
-
-    if (token) {
-      const decoded = jwtDecode<{ actor_type: string }>(token)
-      if (decoded.actor_type === "client" || decoded.actor_type === "developer") {
-        actorType = decoded.actor_type
-      }
-    }
-  } catch {
-    // unauthenticated or invalid token
-  }
+export default async function Footer() {
+  const actorType: "client" | "developer" | null = await getActorType()
 
   return (
     <footer className="border-t border-ui-border-base w-full">
@@ -125,9 +109,18 @@ export default async function FooterTemp() {
                     Notifications
                   </LocalizedClientLink>
                 </li>
-              </ul>
+                {actorType === "developer" && (
+                  <li>
+                    <LocalizedClientLink
+                      href="/developer/account/my-reviews"
+                      className="hover:text-ui-fg-base"
+                    >
+                      My Reviews
+                    </LocalizedClientLink>
+                  </li>
+                )}
+              </ul>         
             </div>
-
             {/* Company */}
             <div className="flex flex-col gap-y-2">
               <span className="txt-small-plus text-ui-fg-base">Company</span>

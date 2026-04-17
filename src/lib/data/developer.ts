@@ -51,6 +51,10 @@ export type DeveloperReview = {
   created_at: string
 }
 
+export type DeveloperReviewResponse = {
+  reviews: DeveloperReview[]
+}
+
 export const retrieveDeveloper =
   async (): Promise<DeveloperData | null> => {
     const authHeaders = await getAuthHeaders()
@@ -77,7 +81,9 @@ export const retrieveDeveloper =
   }
 
 export const retrieveDeveloperReviews =
-  async (): Promise<DeveloperReview[] | null> => {
+  async (): Promise<DeveloperReviewResponse | null> => {
+    console.log("Retrieving developer reviews...")
+
     const authHeaders = await getAuthHeaders()
 
     if (!authHeaders) return null
@@ -87,7 +93,7 @@ export const retrieveDeveloperReviews =
     }
 
     const next = {
-      ...(await getCacheOptions("developers")),
+      ...(await getCacheOptions("developer-reviews")),
     }
 
     const result = await sdk.client
@@ -95,10 +101,10 @@ export const retrieveDeveloperReviews =
         method: "GET",
         headers,
         next,
-        cache: "force-cache",
+        cache: "no-store",
       })
 
-      return result as DeveloperReview[]
+    return result as DeveloperReviewResponse
   }
 
 export async function signupDeveloper(_currentState: unknown, formData: FormData) {

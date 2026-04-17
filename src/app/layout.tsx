@@ -5,7 +5,10 @@ import { Metadata } from "next"
 import "../styles/globals.css"
 
 export const metadata: Metadata = {
-  metadataBase: new URL(getBaseURL()),
+  title: {
+    template: "%s | Bugzapper", // %s is replaced by the page's title
+    default: "Bugzapper Home",
+  },
 }
 
 export default function RootLayout(props: { children: React.ReactNode }) {
