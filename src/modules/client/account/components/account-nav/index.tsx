@@ -1,17 +1,20 @@
 "use client"
 
 import { clx } from "@medusajs/ui"
-import { ArrowRightOnRectangle } from "@medusajs/icons"
+import { ArrowRightOnRectangle, BugAntSolid, PaperPlane, ChatBubbleLeftRight, BellAlert, User } from "@medusajs/icons"
 import { usePathname } from "next/navigation"
+import { useState } from "react"
 
 import ChevronDown from "@modules/common/icons/chevron-down"
-import User from "@modules/common/icons/user"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { signoutClient } from "@lib/data/client"
 import { useClientMe } from "@lib/hooks/use-client-me"
-import { Client, signoutClient } from "@lib/data/client"
+
+const ICON_SIZE = "w-6 h-6"
 
 const AccountNav = () => {
   const route = usePathname()
+  const [isOpen, setIsOpen] = useState(true)
 
   const handleLogout = async () => {
     await signoutClient()
@@ -22,8 +25,42 @@ const AccountNav = () => {
 
   const developerSubmissions = client?.bugs?.flatMap((bug) => bug.submissions) || []
 
+  const navItems = [
+    {
+      href: "/client/account",
+      label: "Overview",
+      icon: <User className={ICON_SIZE} />,
+      testId: "overview-link",
+    },
+    {
+      href: "/client/account/my-bugs",
+      label: `My Bugs (${client?.bugs?.length || 0})`,
+      icon: <BugAntSolid className={ICON_SIZE} />,
+      testId: "my-bugs-link",
+    },
+    {
+      href: "/client/account/developer-submissions",
+      label: `Developer Submissions (${developerSubmissions.length})`,
+      icon: <PaperPlane className={ICON_SIZE} />,
+      testId: "submissions-link",
+    },
+    {
+      href: "/client/account/messages",
+      label: "Messages",
+      icon: <ChatBubbleLeftRight className={ICON_SIZE} />,
+      testId: "messages-link",
+    },
+    {
+      href: "/client/account/notifications",
+      label: "Notifications",
+      icon: <BellAlert className={ICON_SIZE} />,
+      testId: "notifications-link",
+    },
+  ]
+
   return (
-    <div>
+    <>
+      {/* Mobile nav */}
       <div className="small:hidden" data-testid="mobile-account-nav">
         {route !== `/client/account` ? (
           <LocalizedClientLink
@@ -31,10 +68,8 @@ const AccountNav = () => {
             className="flex items-center gap-x-2 text-small-regular py-2"
             data-testid="account-main-link"
           >
-            <>
-              <ChevronDown className="transform rotate-90" />
-              <span>Account</span>
-            </>
+            <ChevronDown className="transform rotate-90" />
+            <span>Account</span>
           </LocalizedClientLink>
         ) : (
           <>
@@ -43,36 +78,21 @@ const AccountNav = () => {
             </div>
             <div className="text-base-regular">
               <ul>
-                <li>
-                  <LocalizedClientLink
-                    href="/client/account/my-bugs"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
-                    data-testid="profile-link"
-                  >
-                    <>
+                {navItems.map((item) => (
+                  <li key={item.href}>
+                    <LocalizedClientLink
+                      href={item.href}
+                      className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
+                      data-testid={item.testId}
+                    >
                       <div className="flex items-center gap-x-2">
-                        <User size={20} />
-                        <span>My Bugs ({client?.bugs?.length || 0})</span>
+                        {item.icon}
+                        <span>{item.label}</span>
                       </div>
                       <ChevronDown className="transform -rotate-90" />
-                    </>
-                  </LocalizedClientLink>
-                </li>
-                <li>
-                  <LocalizedClientLink
-                    href="/client/account/developer-submissions"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
-                    data-testid="profile-link"
-                  >
-                    <>
-                      <div className="flex items-center gap-x-2">
-                        <User size={20} />
-                        <span>Developer Submissions ({developerSubmissions.length})</span>
-                      </div>
-                      <ChevronDown className="transform -rotate-90" />
-                    </>
-                  </LocalizedClientLink>
-                </li>                
+                    </LocalizedClientLink>
+                  </li>
+                ))}
                 <li>
                   <button
                     type="button"
@@ -82,7 +102,7 @@ const AccountNav = () => {
                   >
                     <div className="flex items-center gap-x-2">
                       <ArrowRightOnRectangle />
-                      <span>Log out!</span>
+                      <span>Log out</span>
                     </div>
                     <ChevronDown className="transform -rotate-90" />
                   </button>
@@ -92,54 +112,76 @@ const AccountNav = () => {
           </>
         )}
       </div>
-      <div className="hidden small:block" data-testid="account-nav">
-        <div>
-          <div className="pb-4">
-            <h3 className="text-base-semi">Account</h3>
-          </div>
-          <div className="text-base-regular">
-            <ul className="flex mb-0 justify-start items-start flex-col gap-y-4">
-              <li>
-                <AccountNavLink
-                  href="/client/account"
-                  route={route!}
-                  data-testid="overview-link"
-                >
-                  Overview
-                </AccountNavLink>
-              </li>
-              <li>
-                <AccountNavLink
-                  href="/client/account/my-bugs"
-                  route={route!}
-                  data-testid="profile-link"
-                >
-                  My Bugs ({client?.bugs?.length || 0 })
-                </AccountNavLink>
-              </li>
-              <li>
-                <AccountNavLink
-                  href="/client/account/developer-submissions"
-                  route={route!}
-                  data-testid="profile-link"
-                >
-                  Developer Submissions ({developerSubmissions?.length || 0 })
-                </AccountNavLink>
-              </li>              
-              <li className="text-grey-700">
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  data-testid="logout-button"
+
+      {/* Desktop slide-in/out nav */}
+      <div className="hidden small:flex flex-row relative" data-testid="account-nav">
+        <div className="flex flex-col gap-y-4 pt-1">
+          {/* Toggle button */}
+          <button
+            onClick={() => setIsOpen((prev) => !prev)}
+            className="flex items-center justify-center w-5 h-5 rounded-full border border-ui-border-base bg-ui-bg-base hover:bg-ui-bg-subtle transition-all duration-300 shrink-0"
+            aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
+          >
+            <ChevronDown
+              className={clx("transition-transform duration-300 w-3 h-3", {
+                "-rotate-90": isOpen,
+                "rotate-90": !isOpen,
+              })}
+            />
+          </button>
+          {/* Nav items */}
+          <ul className="flex flex-col gap-y-4">
+            {navItems.map((item) => {
+              const active = route === item.href
+              return (
+                <li key={item.href}>
+                  <LocalizedClientLink
+                    href={item.href}
+                    data-testid={item.testId}
+                    className={clx(
+                      "flex items-center gap-x-3 text-ui-fg-subtle hover:text-ui-fg-base transition-colors",
+                      { "text-ui-fg-base font-semibold": active }
+                    )}
+                  >
+                    <span className="shrink-0">{item.icon}</span>
+                    <span
+                      className={clx(
+                        "transition-all duration-300 overflow-hidden whitespace-nowrap text-sm",
+                        isOpen ? "max-w-[200px] opacity-100" : "max-w-0 opacity-0"
+                      )}
+                    >
+                      {item.label}
+                    </span>
+                  </LocalizedClientLink>
+                </li>
+              )
+            })}
+
+            {/* Logout */}
+            <li>
+              <button
+                type="button"
+                onClick={handleLogout}
+                data-testid="logout-button"
+                className="flex items-center gap-x-3 text-ui-fg-subtle hover:text-ui-fg-base transition-colors"
+              >
+                <span className="shrink-0">
+                  <ArrowRightOnRectangle className={ICON_SIZE} />
+                </span>
+                <span
+                  className={clx(
+                    "transition-all duration-300 overflow-hidden whitespace-nowrap text-sm",
+                    isOpen ? "max-w-[160px] opacity-100" : "max-w-0 opacity-0"
+                  )}
                 >
                   Log out
-                </button>
-              </li>
-            </ul>
-          </div>
+                </span>
+              </button>
+            </li>
+          </ul>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
@@ -157,7 +199,7 @@ const AccountNavLink = ({
   "data-testid": dataTestId,
 }: AccountNavLinkProps) => {
   const active = route === href
-  
+
   return (
     <LocalizedClientLink
       href={href}

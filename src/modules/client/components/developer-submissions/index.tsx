@@ -17,6 +17,7 @@ import SubmissionsListTemplate from "@modules/submissions/components/list-templa
 import { useClientMe } from "@lib/hooks/use-client-me"
 import { clientStatusColumn, descriptionColumn, notesColumn, submittedColumn, titleColumn } from "@modules/submissions/components/list-template/columns"
 import ApprovalModal from "@modules/approval/components/approval-modal"
+import { useSearchParams, useRouter, usePathname } from "next/navigation"
 
 const columns = [
   titleColumn,
@@ -29,7 +30,11 @@ const columns = [
 const SUBMISSION_LIMIT = 15
 
 export default function DeveloperSubmissions() {
-  const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null)
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState<boolean>(false)
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState<boolean>(false)
   
@@ -101,19 +106,30 @@ export default function DeveloperSubmissions() {
   }
 
   const handleRowClicked = (submission: Submission) => {
-    setSelectedSubmission(submission)
+    setSelectedSubmissionId(submission.id)
     setIsDetailsModalOpen(true)
   }
 
+  useEffect(() => {
+    const submissionId = searchParams.get("submissionId")
+    if (submissionId) {
+      setSelectedSubmissionId(submissionId)
+      setIsDetailsModalOpen(true)
+    }
+  }, [searchParams])
+
   const handleApprovalFinalized = () => {
     toast.success("Submission approved and payment processed successfully!")
-    // setSelectedSubmission(null)
-    // setIsPaymentModalOpen(false)
   }
 
   const handleCloseModal = () => {
     setIsDetailsModalOpen(false)
-    setSelectedSubmission(null)
+    setSelectedSubmissionId(null)
+
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete("submissionId")
+    const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname
+    router.replace(newUrl)
   }
 
   return (
@@ -134,18 +150,18 @@ export default function DeveloperSubmissions() {
         search={search}
         setSearch={setSearch}
       />
-      {selectedSubmission && (
+      {selectedSubmissionId && (
         <>
           <SubmissionDetailsModal
             isOpen={isDetailsModalOpen}
             onClose={handleCloseModal}
             onApprovalInitiated={handleApprovalInitiated}
             // onConfirm={handleClaimBug}
-            submission={selectedSubmission}
+            submissionId={selectedSubmissionId}
           />
           <ApprovalModal
-            submissionId={selectedSubmission?.id || ""}
-            developerId={selectedSubmission?.bug?.developer?.id || ""}
+            submissionId={selectedSubmissionId || ""}
+            developerId={selectedSubmissionId ? data?.response?.submissions.find(sub => sub.id === selectedSubmissionId)?.bug?.developer?.id || "" : ""}
             isOpen={isPaymentModalOpen}
             close={handleCloseModal}
             // clientSecret={clientSecret!}

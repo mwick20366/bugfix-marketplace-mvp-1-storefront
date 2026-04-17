@@ -28,29 +28,6 @@ export default function MarketplaceBugDetailsModal({
   bug,
 }: MarketplaceBugDetailsModalProps) {
   const [isConfirming, setIsConfirming] = useState(false);
-  // const { mutate: claimBug, isPending: isClaiming } = useClaimBug(bug?.id);
-
-  const queryClient = useQueryClient()
-
-  // const handleClaimBug = () => {
-  //   claimBug(undefined, {
-  //     onSuccess: () => {
-  //       toast.success("Bug claimed successfully");
-  //       setIsConfirming(false);
-
-  //       queryClient.invalidateQueries({ queryKey: ["bugs"] })
-  //       queryClient.invalidateQueries({ queryKey: ["my-bugs"] })
-  //       queryClient.invalidateQueries({ queryKey: ["my-submissions"] })
-  //       queryClient.invalidateQueries({ queryKey: ["developer-me"] })
-
-  //       onClose();
-  //     },
-  //     onError: (error) => {
-  //       toast.error(`Failed to claim bug: ${error.message}`);
-  //     },
-  //   });
-  // };
-
   const handleClaimClick = () => {
     const redirect = encodeURIComponent("/developer/account/bug-marketplace?status=open&bugId=" + bug.id)
     window.location.href = `/developer/account?redirect=${redirect}`

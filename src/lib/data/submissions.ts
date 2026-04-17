@@ -21,6 +21,13 @@ export type Submission = {
   created_at: string,
   updated_at: string,
   client_notes?: string,
+  developer?: { id: string, first_name: string },
+  client?: { id: string, first_name: string },
+  attachments?: {
+    id: string
+    url: string
+    filename: string
+  }[]
 }
 
 export const retrieveSubmission =

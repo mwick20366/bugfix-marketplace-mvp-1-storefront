@@ -11,7 +11,7 @@ import { useQueryClient } from "@tanstack/react-query"
 
 const schema = zod.object({
   firstName: zod.string().min(1, "First name is required"),
-  lastName: zod.string().min(1, "Last name is required"),
+  last_name: zod.string().min(1, "Last name is required"),
   email: zod.string().email("Invalid email address"),
   phone: zod.string().optional(),
 })
@@ -42,7 +42,7 @@ export function PaymentForm({
   const form = useForm<BillingFormValues>({
     defaultValues: {
       firstName: "",
-      lastName: "",
+      last_name: "",
       email: "",
       phone: "",
     },
@@ -70,7 +70,7 @@ export function PaymentForm({
     currency: "USD",
   }).format(bounty)
 
-  const handleConfirmAndPay = form.handleSubmit(async ({ firstName, lastName, email, phone }) => {
+  const handleConfirmAndPay = form.handleSubmit(async ({ firstName, last_name, email, phone }) => {
     const card = elements?.getElement(CardElement)
 
     if (!stripe || !elements || !card || !clientSecret) {
@@ -84,7 +84,7 @@ export function PaymentForm({
         payment_method: {
           card,
           billing_details: {
-            name: `${firstName} ${lastName}`,
+            name: `${firstName} ${last_name}`,
             email,
             phone: phone || undefined,
           },
@@ -142,7 +142,7 @@ export function PaymentForm({
           />
           <Controller
             control={form.control}
-            name="lastName"
+            name="last_name"
             render={({ field, fieldState }) => (
               <div className="flex flex-col gap-1 w-full">
                 <input

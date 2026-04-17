@@ -4,8 +4,6 @@ import { submitFix } from "@lib/data/bugs"
 import { SubmitFixSchema } from "@modules/developer/components/bug-details-modal/validators"
 
 export const useSubmitFix = (bugId: string, options?: UseMutationOptions<any, any, SubmitFixSchema>) => {
-  const queryClient = useQueryClient()
-
   return useMutation({
     mutationFn: ({ notes, file_url }: { notes: string; file_url: string }) =>
       submitFix(notes, file_url, bugId),

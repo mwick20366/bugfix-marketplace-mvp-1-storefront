@@ -1,28 +1,17 @@
 "use server"
 
 import { sdk } from "@lib/config"
-import medusaError from "@lib/util/medusa-error"
-import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
 import {
   getAuthHeaders,
   getCacheOptions,
   getCacheTag,
-  getCartId,
   removeAuthToken,
-  removeCartId,
   setAuthToken,
 } from "./cookies"
-import { Member } from "./member"
 import { Bug } from "./bugs"
 import { Submission } from "./submissions"
-
-// export type Developer = Member & {
-//   // any developer specific fields
-//   bugs?: Bug[],
-//   submissions?: Submission[],
-// }
 
 export type Developer = {
   id: string
@@ -41,6 +30,25 @@ export type DeveloperData = {
     pending_review: number
     total_earned: number
   }
+}
+
+export type DeveloperReview = {
+  id: string
+  rating: number
+  notes: string
+  client: {
+    id: string
+    contact_first_name: string
+    company_name: string
+  }
+  submission: {
+    id: string
+    bug: {
+      id: string
+    }
+  }
+
+  created_at: string
 }
 
 export const retrieveDeveloper =
@@ -68,13 +76,38 @@ export const retrieveDeveloper =
       return result as DeveloperData
   }
 
+export const retrieveDeveloperReviews =
+  async (): Promise<DeveloperReview[] | null> => {
+    const authHeaders = await getAuthHeaders()
+
+    if (!authHeaders) return null
+
+    const headers = {
+      ...authHeaders,
+    }
+
+    const next = {
+      ...(await getCacheOptions("developers")),
+    }
+
+    const result = await sdk.client
+      .fetch(`/developers/me/reviews`, {
+        method: "GET",
+        headers,
+        next,
+        cache: "force-cache",
+      })
+
+      return result as DeveloperReview[]
+  }
+
 export async function signupDeveloper(_currentState: unknown, formData: FormData) {
   const password = formData.get("password") as string
   
   const developerForm = {
     email: formData.get("email") as string,
     first_name: formData.get("first_name") as string,
-    lastName: formData.get("last_name") as string,
+    last_name: formData.get("last_name") as string,
   }
 
   try {
@@ -89,9 +122,9 @@ export async function signupDeveloper(_currentState: unknown, formData: FormData
       ...(await getAuthHeaders()),
     }
 
-    const createdDeveloper = await sdk.client.fetch("/developer", {
+    const createdDeveloper = await sdk.client.fetch("/developers", {
       method: "POST",
-      body: developerForm,
+      body: { ...developerForm },
       headers
     })
 

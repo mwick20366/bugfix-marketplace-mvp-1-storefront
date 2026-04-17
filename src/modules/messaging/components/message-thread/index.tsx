@@ -4,9 +4,11 @@
 import { useEffect, useRef } from "react"
 import { useMessages, useSendMessage } from "@lib/hooks/use-messages"
 import { useForm } from "react-hook-form"
+import { getAuthToken } from "@lib/data/auth-token"
 
 type MessageThreadProps = {
-  bugId: string
+  bugId?: string
+  submissionId?: string
   currentUserId: string
 }
 
@@ -16,10 +18,14 @@ type MessageForm = {
 
 export default function MessageThread({
   bugId,
+  submissionId,
   currentUserId
 }: MessageThreadProps) {
-  const { messages, isLoading } = useMessages(bugId)
-  const { mutate: send, isPending: isSending } = useSendMessage(bugId)
+  const threadId = submissionId || bugId || ""
+  const threadType = submissionId ? "submission" : "bug"
+
+  const { messages, isLoading } = useMessages(threadId, threadType)
+  const { mutate: send, isPending: isSending } = useSendMessage(threadId, threadType)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   const { register, handleSubmit, reset, watch } = useForm<MessageForm>({
@@ -28,20 +34,34 @@ export default function MessageThread({
 
   const content = watch("content")
 
-  // SSE for real-time updates
   useEffect(() => {
-   const source = new EventSource(
-      `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/bugs/${bugId}/messages/subscribe`
-    )
+    if (!threadId) return
 
-    source.onmessage = () => {
-      // Invalidation is handled by useSendMessage on the sender's side;
-      // for the receiver, we rely on SSE to trigger a refetch
-      // You can also call queryClient.invalidateQueries here if needed
-    }
+    const controller = new AbortController()
 
-    return () => source.close()
-  }, [bugId])
+    ;(async () => {
+      // const token = localStorage.getItem("_medusa_jwt") // adjust as needed
+      const token = await getAuthToken()
+
+      const url = threadType === "submission"
+        ? `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/submissions/${threadId}/messages/subscribe`
+        : `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/bugs/${threadId}/messages/subscribe`
+
+      try {
+        const res = await fetch(url, {
+          headers: { Authorization: `Bearer ${token}` },
+          signal: controller.signal,
+        })
+        const reader = res.body?.getReader()
+        // read chunks...
+      } catch (err) {
+        if ((err as any)?.name === "AbortError") return
+        console.error(err)
+      }
+    })()
+
+    return () => controller.abort()
+  }, [threadId, threadType])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -71,7 +91,7 @@ export default function MessageThread({
               key={msg.id}
               className={`flex flex-col gap-y-1 ${isCurrentUser ? "items-end" : "items-start"}`}
             >
-              <span className="text-xs text-ui-fg-subtle capitalize">{msg.sender_type}</span>
+              <span className="text-xs text-ui-fg-subtle capitalize">{isCurrentUser ? "You" : msg.sender_type}</span>
               <div
                 className={`max-w-[75%] rounded-lg px-4 py-2 text-sm ${
                   isCurrentUser

@@ -4,22 +4,6 @@ import { useQuery } from "@tanstack/react-query"
 import { Container } from "@medusajs/ui"
 import StatCard from "@modules/dashboard/components/stat-card"
 
-// type StatCardProps = {
-//   title: string
-//   value: string | number
-//   description?: string
-// }
-
-// const StatCard = ({ title, value, description }: StatCardProps) => (
-//   <Container className="flex flex-col gap-y-2 p-6">
-//     <p className="text-ui-fg-muted text-sm font-medium">{title}</p>
-//     <p className="text-ui-fg-base text-3xl font-semibold">{value}</p>
-//     {description && (
-//       <p className="text-ui-fg-subtle text-xs">{description}</p>
-//     )}
-//   </Container>
-// )
-
 export default function DeveloperDashboardPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["developer-me"],

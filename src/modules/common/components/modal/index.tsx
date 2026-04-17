@@ -73,13 +73,23 @@ const Body: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   )
 }
 
-const Footer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const Footer: React.FC<{ 
+  children: React.ReactNode
+  cancelLabel?: string
+  showCancel?: boolean
+}> = ({ 
+  children,
+  cancelLabel = "Cancel",
+  showCancel = true,
+}) => {
   return (
     <FocusModal.Footer>
       <div className="flex items-center gap-x-2">
-        <FocusModal.Close asChild>
-          <Button variant="secondary">Cancel</Button>
-        </FocusModal.Close>
+        {showCancel && (
+          <FocusModal.Close asChild>
+            <Button variant="secondary">{cancelLabel}</Button>
+          </FocusModal.Close>
+        )}
         {children}
       </div>
     </FocusModal.Footer>    

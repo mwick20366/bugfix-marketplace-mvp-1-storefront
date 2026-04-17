@@ -29,32 +29,39 @@ export type Bug = {
     developer?: Developer
     client?: Client
     submissions?: Submission[]
+    attachments?: {
+      id: string
+      url: string
+      filename: string
+    }[]
 }
 
-export const retrieveBug =
-  async (id: string): Promise<Bug | null> => {
-    const authHeaders = await getAuthHeaders()
+type BugData = {
+  bug: Bug
+}
 
-    if (!authHeaders) return null;
-
-    const headers = {
-      ...authHeaders,
-    }
-
-    const next = {
-      ...(await getCacheOptions("bug")),
-    }
-
-    return await sdk.client
-      .fetch<{ bug: Bug }>(`/bugs/${id}`, {
-        method: "GET",
-        headers,
-        next,
-        cache: "force-cache",
-      })
-      .then(({ bug }) => bug)
-      .catch(() => null)    
+export const retrieveBug = async (id: string): Promise<Bug | null> => {
+  const headers = {
+    ...(await getAuthHeaders()),
   }
+
+  const next = {
+    ...(await getCacheOptions("bugs")),
+  }
+
+  return await sdk.client
+    .fetch<BugData>(`/bugs/${id}`, {
+      method: "GET",
+      headers,
+      next,
+      cache: "no-store",
+      query: {
+        fields: "id,title,description,tech_stack,repo_link,bounty,difficulty,status,claimed_at,created_at,updated_at,*attachments,*developer,*client,*submissions",
+      },
+    })
+    .then(({ bug }) => bug)
+    .catch(() => null)
+}
 
 export const listBugs = async ({
   queryParams,
@@ -250,6 +257,7 @@ export const createBug = async ({
   bounty,
   clientId,
   difficulty,
+  attachments,
 }: {
   title: string
   description: string
@@ -258,7 +266,11 @@ export const createBug = async ({
   bounty: number
   clientId: string
   difficulty: "easy" | "medium" | "hard"
-
+  attachments?: {
+    file_id: string
+    file_url: string
+    filename: string
+  }[]
 }): Promise<any> => {
   const bug = {
     title,
@@ -268,6 +280,7 @@ export const createBug = async ({
     bounty,
     client_id: clientId,
     difficulty,
+    attachments,
   }
 
   const headers = {
@@ -278,12 +291,12 @@ export const createBug = async ({
     method: "POST",
     body: bug,
     headers,
-    })
+  })
 
   const cacheTag = await getCacheTag("bugs")
   revalidateTag(cacheTag)
-  
-  return result    
+
+  return result
 }
 
 export const updateBug = async ({
@@ -294,6 +307,7 @@ export const updateBug = async ({
   bounty,
   difficulty,
   bugId,
+  attachments,
 }: {
   title: string
   description: string
@@ -302,8 +316,12 @@ export const updateBug = async ({
   bounty: number
   difficulty: "easy" | "medium" | "hard"
   bugId: string
+  attachments?: {
+    file_id: string
+    file_url: string
+    filename: string
+  }[]
 }): Promise<any> => {
-
   const bug = {
     title,
     description,
@@ -312,6 +330,7 @@ export const updateBug = async ({
     bounty,
     id: bugId,
     difficulty,
+    attachments,
   }
 
   const headers = {
@@ -322,7 +341,7 @@ export const updateBug = async ({
     method: "POST",
     body: bug,
     headers,
-    })
+  })
 
   const cacheTag = await getCacheTag("bugs")
   revalidateTag(cacheTag)

@@ -1,27 +1,40 @@
 "use client"
-import { QueryClient, useMutation, UseMutationOptions } from "@tanstack/react-query"
+import { useMutation, UseMutationOptions } from "@tanstack/react-query"
 import { createBug } from "@lib/data/bugs"
 import { CreateBugSchema } from "@modules/bugs/components/create-bug/validators"
 
-export const useCreateBug = (clientId: string, options?: UseMutationOptions<any, any, CreateBugSchema>)  => {
-  const queryClient = new QueryClient()
-  
+type CreateBugInput = CreateBugSchema & {
+  attachments?: {
+    file_id: string
+    file_url: string
+    filename: string
+  }[]
+}
+
+export const useCreateBug = (
+  clientId: string,
+  options?: UseMutationOptions<any, any, CreateBugInput>
+) => {
   return useMutation({
-    mutationFn: (
-      {
+    mutationFn: ({
+      title,
+      description,
+      tech_stack,
+      repo_link,
+      bounty,
+      difficulty,
+      attachments,
+    }: CreateBugInput) =>
+      createBug({
         title,
         description,
         tech_stack,
         repo_link,
         bounty,
-        difficulty
-      }: CreateBugSchema
-    ) => createBug({ title, description, tech_stack, repo_link, bounty, clientId, difficulty }),
-    onSuccess: (data: any, variables: any, context: any, meta: any) => {
-      queryClient.invalidateQueries({ queryKey: ["bugs"] })
-      // Forward to hook-level consumer's onSuccess
-      options?.onSuccess?.(data, variables, context, meta)
-    },
-    ...options
+        clientId,
+        difficulty,
+        attachments,
+      }),
+    ...options,
   })
 }

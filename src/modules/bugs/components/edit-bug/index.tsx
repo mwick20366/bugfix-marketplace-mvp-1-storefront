@@ -6,19 +6,31 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Drawer, Heading, Label, Input, Textarea, Button, toast, Select } from "@medusajs/ui"
 import { editBugSchema, EditBugSchema } from "./validators"
-import { sdk } from "@lib/config"
 import { Bug, retrieveBug, updateBug as saveBugChanges } from "@lib/data/bugs"
-import { useEffect } from "react"
+import { createBugAttachment, deleteBugAttachment } from "@lib/data/bug-attachments"
+import { useEffect, useState, useCallback } from "react"
 import { difficultyOptions } from "../create-bug"
+import { useDropzone } from "react-dropzone"
+
+type Attachment = {
+  id: string
+  file_id: string
+  file_url: string
+  filename: string
+}
 
 type EditBugDrawerProps = {
-  bug: Bug
+  bug?: Bug
+  bugId?: string
   isOpen: boolean
   onClose: (open: boolean) => void
 }
 
-export const EditBugDrawer = ({ bug, isOpen, onClose }: EditBugDrawerProps) => {
+export const EditBugDrawer = ({ bug: bugProp, bugId, isOpen, onClose }: EditBugDrawerProps) => {
   const queryClient = useQueryClient()
+  const [pendingFiles, setPendingFiles] = useState<File[]>([])
+  const [attachmentsToDelete, setAttachmentsToDelete] = useState<Set<string>>(new Set())
+  const [isUploadingAttachments, setIsUploadingAttachments] = useState(false)
 
   const form = useForm<EditBugSchema>({
     resolver: zodResolver(editBugSchema),
@@ -33,33 +45,87 @@ export const EditBugDrawer = ({ bug, isOpen, onClose }: EditBugDrawerProps) => {
     },
   })
 
-  // Fetch full bug details when drawer opens
-  const { data: retrievedBug, isLoading } = useQuery({
-    queryFn: () => retrieveBug(bug.id),
-    queryKey: ["bug", bug.id],
-    enabled: isOpen && !!bug.id, // only fetch when drawer is open
+  const { data: fetchedBugData, isLoading } = useQuery<{ bug: Bug }>({
+    queryFn: async () => {
+      const result = await retrieveBug(bugId || "");
+      if (!result) {
+        throw new Error("Bug not found");
+      }
+      return { bug: result };
+    },
+    queryKey: ["bug", bugId],
+    enabled: !!bugId && !bugProp,
+  });
+
+  const retrievedBug = bugProp || fetchedBugData?.bug;
+
+  useEffect(() => {
+  if (retrievedBug && isOpen) {
+    console.log("Setting form values with retrieved bug data:", retrievedBug)
+    form.reset({
+      title: retrievedBug.title,
+      description: retrievedBug.description,
+      tech_stack: retrievedBug.tech_stack || "",
+      repo_link: retrievedBug.repo_link || "",
+      bounty: retrievedBug.bounty ?? 0,
+      difficulty: (retrievedBug.difficulty as "easy" | "medium" | "hard") || "medium",
+    })
+    setPendingFiles([])
+    setAttachmentsToDelete(new Set())
+  }
+}, [retrievedBug, isOpen, form])
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    setPendingFiles((prev) => [...prev, ...acceptedFiles])
+  }, [])
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      "image/*": [],
+      "application/pdf": [],
+      "application/zip": [],
+      "application/x-zip-compressed": [],
+    },
+    multiple: true,
   })
 
-  // const bug = bugData?.bug
+  const markForDeletion = (attachmentId: string) => {
+    setAttachmentsToDelete((prev) => new Set(prev).add(attachmentId))
+  }
 
-  // Reset form when drawer opens with current bug data
-  useEffect(() => {
-    if (retrievedBug && isOpen) {
-      form.reset({
-        title: retrievedBug.title,
-        description: retrievedBug.description,
-        tech_stack: retrievedBug.tech_stack || "",
-        repo_link: retrievedBug.repo_link || "",
-        bounty: retrievedBug.bounty,
-        difficulty: retrievedBug.difficulty,
-      })
-    }
-  }, [retrievedBug, isOpen, form])
+  const unmarkForDeletion = (attachmentId: string) => {
+    setAttachmentsToDelete((prev) => {
+      const next = new Set(prev)
+      next.delete(attachmentId)
+      return next
+    })
+  }
 
   const { mutate: updateBug, isPending } = useMutation({
-    mutationFn: (data: EditBugSchema) => saveBugChanges({ ...data, bugId: bug.id }),
-    onSuccess: () => {
+    mutationFn: (data: EditBugSchema) => saveBugChanges({ ...data, bugId: retrievedBug?.id || "" }),
+    onSuccess: async () => {
+      // Upload new attachments
+      if (pendingFiles.length > 0) {
+        setIsUploadingAttachments(true)
+        try {
+          await createBugAttachment({ bugId: retrievedBug?.id || "", files: pendingFiles })
+        } catch {
+          toast.error("Bug saved but failed to upload attachments")
+        } finally {
+          setIsUploadingAttachments(false)
+        }
+      }
+
+      // Delete marked attachments
+      if (attachmentsToDelete.size > 0) {
+        await Promise.all(
+          Array.from(attachmentsToDelete).map((id) => deleteBugAttachment(id))
+        )
+      }
+
       queryClient.invalidateQueries({ queryKey: ["bugs"] })
+      queryClient.invalidateQueries({ queryKey: ["bug", retrievedBug?.id || ""] })
       toast.success("Bug updated successfully")
       onClose(false)
     },
@@ -72,12 +138,17 @@ export const EditBugDrawer = ({ bug, isOpen, onClose }: EditBugDrawerProps) => {
     updateBug(data)
   })
 
+  const existingAttachments: Attachment[] = (retrievedBug as any)?.attachments || []
+  const visibleAttachments = existingAttachments.filter(
+    (a) => !attachmentsToDelete.has(a.id)
+  )
+
   return (
     <Drawer open={isOpen} onOpenChange={() => onClose(false)}>
       <Drawer.Content
         className="z-[60]"
         overlayProps={{
-            className: "z-[60] !transition-none !animate-none",
+          className: "z-[60] !transition-none !animate-none",
         }}
       >
         <FormProvider {...form}>
@@ -167,6 +238,92 @@ export const EditBugDrawer = ({ bug, isOpen, onClose }: EditBugDrawerProps) => {
                   </div>
                 )}
               />
+
+              {/* Attachments Section */}
+              <div className="flex flex-col gap-y-2">
+                <Label size="small" weight="plus">Attachments</Label>
+
+                {/* Existing attachments */}
+                {!isLoading && visibleAttachments.length > 0 && (
+                  <ul className="flex flex-col gap-y-1 mb-2">
+                    {visibleAttachments.map((attachment) => (
+                      <li key={attachment.id} className="flex items-center justify-between">
+                        <a
+                          href={attachment.file_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs text-ui-fg-interactive underline"
+                        >
+                          {attachment.filename || attachment.file_url.split("/").pop()}
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => markForDeletion(attachment.id)}
+                          className="text-xs text-red-500 hover:text-red-700 ml-2"
+                        >
+                          Remove
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {/* Show attachments marked for deletion with undo option */}
+                {attachmentsToDelete.size > 0 && (
+                  <ul className="flex flex-col gap-y-1 mb-2">
+                    {existingAttachments
+                      .filter((a) => attachmentsToDelete.has(a.id))
+                      .map((attachment) => (
+                        <li key={attachment.id} className="flex items-center justify-between opacity-50">
+                          <span className="text-xs text-ui-fg-muted line-through">
+                            {attachment.filename || attachment.file_url.split("/").pop()}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => unmarkForDeletion(attachment.id)}
+                            className="text-xs text-ui-fg-muted hover:text-ui-fg-base ml-2"
+                          >
+                            Undo
+                          </button>
+                        </li>
+                      ))}
+                  </ul>)}
+                <div
+                  {...getRootProps()}
+                  className={`border border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
+                    isDragActive
+                      ? "border-ui-border-interactive bg-ui-bg-subtle"
+                      : "border-ui-border-strong bg-ui-bg-component"
+                  }`}
+                >
+                  <input {...getInputProps()} />
+                  <p className="text-sm text-ui-fg-muted">
+                    {isDragActive
+                      ? "Drop files here..."
+                      : "Drag and drop files here, or click to select"}
+                  </p>
+                </div>
+
+                {/* Pending new files */}
+                {pendingFiles.length > 0 && (
+                  <ul className="mt-2 flex flex-col gap-y-1">
+                    {pendingFiles.map((file, i) => (
+                      <li key={i} className="flex items-center justify-between">
+                        <span className="text-xs text-ui-fg-muted">{file.name}</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setPendingFiles((prev) => prev.filter((_, idx) => idx !== i))
+                          }
+                          className="text-xs text-ui-fg-muted hover:text-ui-fg-base ml-2"
+                        >
+                          ✕
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </Drawer.Body>
             <Drawer.Footer>
               <div className="flex items-center justify-end gap-x-2">
@@ -176,8 +333,8 @@ export const EditBugDrawer = ({ bug, isOpen, onClose }: EditBugDrawerProps) => {
                 <Button
                   size="small"
                   type="submit"
-                  isLoading={isPending}
-                  disabled={!form.formState.isValid || isPending}
+                  isLoading={isPending || isUploadingAttachments}
+                  disabled={!form.formState.isValid || isPending || isUploadingAttachments}
                 >
                   Save
                 </Button>

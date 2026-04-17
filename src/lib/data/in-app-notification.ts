@@ -45,7 +45,7 @@ export const retrieveNotifications = async ({
     {
       headers,
       next,
-      cache: "force-cache",
+      cache: "no-store",
     }
   )
 

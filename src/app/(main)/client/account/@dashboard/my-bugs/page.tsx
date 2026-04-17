@@ -27,11 +27,10 @@ export default async function Page() {
           View, update, or add new bugs. You can manage your bugs and track their status here.
         </p>
       </div>
-      <CreateBug
+      {/* <CreateBug
         client={clientData.client}
-      />
+      /> */}
       <ClientBugsView client={clientData.client} />
-      {/* <MyBugs client={clientData.client} /> */}
     </div>
   )
 }

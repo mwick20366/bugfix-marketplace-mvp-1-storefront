@@ -7,7 +7,8 @@ import { revalidateTag } from "next/dist/server/web/spec-extension/revalidate"
 
 export type Message = {
   id: string
-  bug_id: string
+  bug_id?: string
+  submission_id?: string
   sender_type: "client" | "developer"
   sender_id: string
   content: string
@@ -22,41 +23,51 @@ export type MessageThread = {
   id: string
   title: string
   status: string
+  last_message_at?: string
+  has_unread?: boolean
   developer?: { first_name: string }
   client?: { first_name: string }
 }
 
+export type SubmissionThread = {
+  id: string
+  notes: string
+  status: string
+  last_message_at?: string
+  has_unread?: boolean
+  developer?: { first_name: string }
+  bug?: { title: string; bounty?: number }
+}
+
 export type MessageThreadsResponse = {
   bugs: MessageThread[]
+  submissions: SubmissionThread[]
 }
 
 export const listMessages = async ({
   bugId,
+  submissionId,
   order = "-created_at",
 }: {
-  bugId: string
+  bugId?: string
+  submissionId?: string
   order?: string
 }): Promise<MessagesResponse | null> => {
   const authHeaders = await getAuthHeaders()
-
   if (!authHeaders) return null
 
-  const headers = {
-    ...authHeaders,
-  }
-
-  const next = {
-    ...(await getCacheOptions(`messages-${bugId}`)),
-  }
+  const id = submissionId || bugId || ""
+  const base = submissionId ? "submissions" : "bugs"
+  const cacheKey = submissionId ? `messages-submission-${id}` : `messages-${id}`
 
   const params = new URLSearchParams({ order })
 
   const result = await sdk.client.fetch(
-    `/bugs/${bugId}/messages?${params.toString()}`,
+    `/${base}/${id}/messages?${params.toString()}`,
     {
-      headers,
-      next,
-      cache: "force-cache",
+      headers: { ...authHeaders },
+      next: await getCacheOptions(cacheKey),
+      cache: "no-store",
     }
   )
 
@@ -80,7 +91,7 @@ export const listMessageThreads = async ({
     {
       headers: { ...authHeaders },
       next: await getCacheOptions(`message-threads`),
-      cache: "force-cache",
+      cache: "no-store",
     }
   )
 
@@ -89,27 +100,28 @@ export const listMessageThreads = async ({
 
 export const sendMessage = async ({
   bugId,
+  submissionId,
   content,
 }: {
-  bugId: string
+  bugId?: string
+  submissionId?: string
   content: string
 }): Promise<{ success: boolean; message?: Message; error?: string }> => {
   const authHeaders = await getAuthHeaders()
-
   if (!authHeaders) return { success: false, error: "Not authenticated" }
 
-  const headers = {
-    ...authHeaders,
-  }
+  const id = submissionId || bugId || ""
+  const base = submissionId ? "submissions" : "bugs"
+  const cacheKey = submissionId ? `messages-submission-${id}` : `messages-${id}`
 
   return sdk.client
-    .fetch(`/bugs/${bugId}/messages`, {
+    .fetch(`/${base}/${id}/messages`, {
       method: "POST",
-      headers,
+      headers: { ...authHeaders },
       body: { content },
     })
     .then(async (result: any) => {
-      const messagesCacheTag = await getCacheTag(`messages-${bugId}`)
+      const messagesCacheTag = await getCacheTag(cacheKey)
       revalidateTag(messagesCacheTag)
       return { success: true, message: result.message }
     })
@@ -120,24 +132,29 @@ export const sendMessage = async ({
 
 export const markMessagesRead = async ({
   bugId,
+  submissionId,
   actorType,
 }: {
-  bugId: string
+  bugId?: string
+  submissionId?: string
   actorType: "client" | "developer"
 }): Promise<{ success: boolean; error?: string }> => {
   const authHeaders = await getAuthHeaders()
   if (!authHeaders) return { success: false, error: "Not authenticated" }
 
+  const id = submissionId || bugId || ""
+  const base = submissionId ? "submissions" : "bugs"
+  const cacheKey = submissionId ? `messages-submission-${id}` : `messages-${id}`
+
   return sdk.client
-    .fetch(`/bugs/${bugId}/messages/mark-read`, {
+    .fetch(`/${base}/${id}/messages/mark-read`, {
       method: "POST",
       headers: { ...authHeaders },
       body: { reader_type: actorType },
     })
     .then(async () => {
-      const messagesCacheTag = await getCacheTag(`messages-${bugId}`)
+      const messagesCacheTag = await getCacheTag(cacheKey)
       revalidateTag(messagesCacheTag)
-      // Also invalidate the global unread count
       const globalCacheTag = await getCacheTag(`messages-unread`)
       revalidateTag(globalCacheTag)
       return { success: true }
@@ -146,7 +163,7 @@ export const markMessagesRead = async ({
 }
 
 export const getUnreadCount = async ({
-  bugId
+  bugId,
 }: {
   bugId: string
 }): Promise<number> => {
@@ -171,7 +188,11 @@ export const getGlobalUnreadCount = async (): Promise<number> => {
 
   const result = await sdk.client.fetch(
     `/messages/unread`,
-    { headers: { ...authHeaders }, next: await getCacheOptions(`messages-unread`), cache: "force-cache" }
+    {
+      headers: { ...authHeaders },
+      next: await getCacheOptions(`messages-unread`),
+      cache: "force-cache",
+    }
   )
 
   return (result as any).unread_count ?? 0

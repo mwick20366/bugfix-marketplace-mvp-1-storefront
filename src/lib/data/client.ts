@@ -113,9 +113,13 @@ export async function signupClient(_currentState: unknown, formData: FormData) {
       ...(await getAuthHeaders()),
     }
 
-    const createdClient = await sdk.client.fetch("/client", {
+    const createdClient = await sdk.client.fetch("/clients", {
       method: "POST",
-      body: clientForm,
+      body: {
+        client: {
+          ...clientForm,
+        }
+      },
       headers
     })
 
@@ -127,8 +131,8 @@ export async function signupClient(_currentState: unknown, formData: FormData) {
     await setAuthToken(loginToken as string)
     sdk.client.setToken(loginToken as string)
 
-    const customerCacheTag = await getCacheTag("customers")
-    revalidateTag(customerCacheTag)
+    const clientCacheTag = await getCacheTag("clients")
+    revalidateTag(clientCacheTag)
 
     return createdClient
   } catch (error: any) {
@@ -147,8 +151,8 @@ export async function loginClient(_currentState: unknown, formData: FormData) {
         await setAuthToken(token as string)
         sdk.client.setToken(token as string)
 
-        const customerCacheTag = await getCacheTag("clients")
-        revalidateTag(customerCacheTag)
+        const clientCacheTag = await getCacheTag("clients")
+        revalidateTag(clientCacheTag)
       })
   } catch (error: any) {
     return error.toString()
@@ -160,13 +164,8 @@ export async function signoutClient() {
 
   await removeAuthToken()
 
-  const customerCacheTag = await getCacheTag("clients")
-  revalidateTag(customerCacheTag)
-
-  await removeCartId()
-
-  const cartCacheTag = await getCacheTag("clients")
-  revalidateTag(cartCacheTag)
+  const clientCacheTag = await getCacheTag("clients")
+  revalidateTag(clientCacheTag)
 
   redirect(`/client/account`)
 }

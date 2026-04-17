@@ -201,9 +201,11 @@ export default function MyBugs(props: MyBugsProps) {
     })
   }
 
-  const handleReviewSubmission = () => {
-    // logic to open review submission modal goes here
-    toast.info("Review submission functionality is not implemented yet.")
+  const handleReviewSubmission = (submissionId: string) => {
+    const newUrl = `/client/account/developer-submissions?submissionId=${submissionId}`
+    router.push(newUrl)
+
+    // toast.info("Review submission functionality is not implemented yet.")
   }
 
   return (
@@ -239,9 +241,9 @@ export default function MyBugs(props: MyBugsProps) {
         <EditBugDrawer
           isOpen={isDrawerOpen}
           onClose={() => setIsDrawerOpen(false)}
-          bug={data?.response?.bugs.find((b) => b.id === selectedBugId)!}
-        />
-      )}
+          bugId={selectedBugId}
+         />
+       )}
     </div>
   )
 }

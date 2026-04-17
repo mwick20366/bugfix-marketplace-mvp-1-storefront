@@ -43,8 +43,6 @@ export default function MySubmissions(props: MySubmissionsProps) {
   const queryParams = {
     limit: SUBMISSION_LIMIT,
     developer_id: developer.id,
-    // developerId: developer.id,
-    // status: "claimed",
   }
 
   const sortingParams = {
@@ -89,13 +87,12 @@ export default function MySubmissions(props: MySubmissionsProps) {
     }),
     queryKey,
     placeholderData: keepPreviousData,
-    // enabled: false, // Disable automatic fetching on mount
   })
 
-  useEffect(() => {
-    refetch()
-    // Fetch data when component mounts or dependencies change
-  }, [])
+  // useEffect(() => {
+  //   refetch()
+  //   // Fetch data when component mounts or dependencies change
+  // }, [])
 
   useEffect(() => {
     const submissionId = searchParams.get("submissionId")
@@ -113,6 +110,11 @@ export default function MySubmissions(props: MySubmissionsProps) {
   const handleCloseModal = () => {
     setIsModalOpen(false)
     setSelectedSubmissionId(null)
+
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete("submissionId")
+    const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname
+    router.replace(newUrl)    
   }
 
   return (

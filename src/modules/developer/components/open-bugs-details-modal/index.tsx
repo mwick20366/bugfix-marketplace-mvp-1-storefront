@@ -1,6 +1,6 @@
 "use client";
 
-import { Bug } from "@lib/data/bugs";
+import { Bug, retrieveBug } from "@lib/data/bugs";
 import { sdk } from "@lib/config";
 import { useClaimBug } from "@lib/hooks/use-claim-bug";
 import { toast, Button } from "@medusajs/ui";
@@ -36,10 +36,13 @@ export default function OpenBugsDetailsModal({
 
   // Fetch bug by ID only if no bug object was passed directly
   const { data: fetchedBugData, isLoading } = useQuery<{ bug: Bug }>({
-    queryFn: () =>
-      sdk.client.fetch(`/bugs/${bugId}`, {
-        method: "GET",
-      }),
+    queryFn: async () => {
+      const result = await retrieveBug(bugId || "");
+      if (!result) {
+        throw new Error("Bug not found");
+      }
+      return { bug: result };
+    },
     queryKey: ["bug", bugId],
     enabled: !!bugId && !bugProp,
   });
