@@ -24,6 +24,7 @@ export default function ClaimBugModal({
   const { mutate: claimBug } = useClaimBug(bug?.id, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["bugs"] })
+        queryClient.invalidateQueries({ queryKey: ["my-bugs"] })
         queryClient.invalidateQueries({ queryKey: ["developer-me"] })
         toast.success("Bug claimed successfully")
         onClose()

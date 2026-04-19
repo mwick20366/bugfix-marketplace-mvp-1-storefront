@@ -27,7 +27,7 @@ export default async function Nav() {
   } else if (actorType === "client") {
     const clientData = await retrieveClient().catch(() => null)
     displayName = clientData?.client.contact_first_name || "Client"
-    // avatarUrl = clientData?.client.avatar_url || null
+    avatarUrl = clientData?.client.avatar_url || ""
   }
 
   const isLoggedIn = Boolean(actorType)

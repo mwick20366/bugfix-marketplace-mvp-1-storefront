@@ -1,10 +1,10 @@
-// src/modules/messaging/components/message-thread/index.tsx
 "use client"
 
 import { useEffect, useRef } from "react"
 import { useMessages, useSendMessage } from "@lib/hooks/use-messages"
 import { useForm } from "react-hook-form"
 import { getAuthToken } from "@lib/data/auth-token"
+import { Avatar } from "@medusajs/ui"
 
 type MessageThreadProps = {
   bugId?: string
@@ -19,13 +19,16 @@ type MessageForm = {
 export default function MessageThread({
   bugId,
   submissionId,
-  currentUserId
+  currentUserId,
 }: MessageThreadProps) {
   const threadId = submissionId || bugId || ""
   const threadType = submissionId ? "submission" : "bug"
 
   const { messages, isLoading } = useMessages(threadId, threadType)
-  const { mutate: send, isPending: isSending } = useSendMessage(threadId, threadType)
+  const { mutate: send, isPending: isSending } = useSendMessage(
+    threadId,
+    threadType
+  )
   const bottomRef = useRef<HTMLDivElement>(null)
 
   const { register, handleSubmit, reset, watch } = useForm<MessageForm>({
@@ -40,12 +43,12 @@ export default function MessageThread({
     const controller = new AbortController()
 
     ;(async () => {
-      // const token = localStorage.getItem("_medusa_jwt") // adjust as needed
       const token = await getAuthToken()
 
-      const url = threadType === "submission"
-        ? `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/submissions/${threadId}/messages/subscribe`
-        : `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/bugs/${threadId}/messages/subscribe`
+      const url =
+        threadType === "submission"
+          ? `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/submissions/${threadId}/messages/subscribe`
+          : `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/bugs/${threadId}/messages/subscribe`
 
       try {
         const res = await fetch(url, {
@@ -68,13 +71,13 @@ export default function MessageThread({
   }, [messages])
 
   const onSubmit = ({ content }: MessageForm) => {
-    send(
-      { content },
-      { onSuccess: () => reset() }
-    )
+    send({ content }, { onSuccess: () => reset() })
   }
 
-  if (isLoading) return <span className="text-sm text-ui-fg-subtle">Loading messages...</span>
+  if (isLoading)
+    return (
+      <span className="text-sm text-ui-fg-subtle">Loading messages...</span>
+    )
 
   return (
     <div className="flex flex-col h-full">
@@ -86,12 +89,24 @@ export default function MessageThread({
         )}
         {messages.map((msg) => {
           const isCurrentUser = msg.sender_id === currentUserId
+
+          const fallback =
+            [msg.sender_first_name?.[0], msg.sender_last_name?.[0]]
+              .filter(Boolean)
+              .join("")
+              .toUpperCase() || (msg.sender_type === "developer" ? "D" : "C")
+
           return (
             <div
               key={msg.id}
-              className={`flex flex-col gap-y-1 ${isCurrentUser ? "items-end" : "items-start"}`}
+              className={`flex flex-col gap-y-1 ${
+                isCurrentUser ? "items-end" : "items-start"
+              }`}
             >
-              <span className="text-xs text-ui-fg-subtle capitalize">{isCurrentUser ? "You" : msg.sender_type}</span>
+              <Avatar
+                src={msg.sender_avatar_url ?? undefined}
+                fallback={fallback}
+              />
               <div
                 className={`max-w-[75%] rounded-lg px-4 py-2 text-sm ${
                   isCurrentUser

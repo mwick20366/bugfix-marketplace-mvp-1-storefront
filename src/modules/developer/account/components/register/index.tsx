@@ -18,6 +18,7 @@ type Props = {
 type RegisterFormValues = {
   first_name: string
   last_name: string
+  tech_stack?: string
   email: string
   password: string
 }
@@ -32,6 +33,7 @@ const Register = ({ setCurrentView }: Props) => {
     defaultValues: {
       first_name: "",
       last_name: "",
+      tech_stack: "",
       email: "",
       password: "",
     },
@@ -69,6 +71,7 @@ const Register = ({ setCurrentView }: Props) => {
       const formData = new FormData()
       formData.append("first_name", data.first_name)
       formData.append("last_name", data.last_name)
+      formData.append("tech_stack", data.tech_stack || "")
       formData.append("email", data.email)
       formData.append("password", data.password)
       if (avatarUrl) {
@@ -117,6 +120,12 @@ const Register = ({ setCurrentView }: Props) => {
             type="email"
             autoComplete="email"
             data-testid="email-input"
+          />
+          <Input
+            label="Tech Stack"
+            {...form.register("tech_stack", { required: true })}
+            autoComplete="tech-stack"
+            data-testid="tech-stack-input"
           />
           <Input
             label="Password"

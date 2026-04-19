@@ -11,6 +11,9 @@ export type Message = {
   submission_id?: string
   sender_type: "client" | "developer"
   sender_id: string
+  sender_first_name: string
+  sender_last_name: string
+  sender_avatar_url?: string
   content: string
   created_at: string
 }
@@ -25,8 +28,8 @@ export type MessageThread = {
   status: string
   last_message_at?: string
   has_unread?: boolean
-  developer?: { first_name: string }
-  client?: { first_name: string }
+  developer?: { first_name: string, avatar_url?: string }
+  client?: { first_name: string, avatar_url?: string }
 }
 
 export type SubmissionThread = {
@@ -35,7 +38,7 @@ export type SubmissionThread = {
   status: string
   last_message_at?: string
   has_unread?: boolean
-  developer?: { first_name: string }
+  developer?: { first_name: string, avatar_url?: string }
   bug?: { title: string; bounty?: number }
 }
 

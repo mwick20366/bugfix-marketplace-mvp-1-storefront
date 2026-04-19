@@ -15,6 +15,7 @@ import { Member } from "./member"
 import { Submission } from "./submissions"
 import { Bug } from "./bugs"
 import { NotificationsResponse } from "./in-app-notification"
+import { getAuthToken } from "./auth-token"
 
 // export type Client = Member & {
 //   company: string
@@ -29,6 +30,7 @@ export type Client = {
   company_name: string
   contact_first_name: string
   contact_last_name: string
+  avatar_url?: string
   bugs?: Bug[]
   submissions?: Submission[]
 }
@@ -61,45 +63,52 @@ export const retrieveClient =
       .fetch(`/clients/me`, {
         headers,
         next,
-        cache: "force-cache",
+        cache: "no-store",
       })
 
     return result as ClientData;
-      // .then(({ client }) => client)
-      // .catch(() => null)
   }
 
+export const updateClient = async (body: {
+  contact_first_name?: string
+  contact_last_name?: string
+  company_name?: string
+  avatar_url?: string
+}) => {
+  const token = await getAuthToken()
 
-// TODO: Change below to updateClient and allow updating client specific fields as well, not just customer fields
-// export const updateClient = async (body: HttpTypes.StoreUpdateCustomer) => {
-//   const headers = {
-//     ...(await getAuthHeaders()),
-//   }
-// export const updateMember = async (body: HttpTypes.StoreUpdateCustomer) => {
-//   const headers = {
-//     ...(await getAuthHeaders()),
-//   }
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/clients/me`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(body),
+    }
+  )
+  .finally(async () => {
+    const clientCacheTag = getCacheTag("clients")
+    revalidateTag(await clientCacheTag)
+  })
 
-//   const updateRes = await sdk.store.customer
-//     .update(body, {}, headers)
-//     .then(({ customer }) => customer)
-//     .catch(medusaError)
-
-//   const cacheTag = await getCacheTag("customers")
-//   revalidateTag(cacheTag)
-
-//   return updateRes
-// }
+  return response.json()
+}
 
 export async function signupClient(_currentState: unknown, formData: FormData) {
   const password = formData.get("password") as string
-  
+  const avatarUrl = formData.get("avatar_url") as string | null
+
   const clientForm = {
     email: formData.get("email") as string,
-    company_name: formData.get("company") as string,
-    contact_first_name: formData.get("first_name") as string,
-    contact_last_name: formData.get("last_name") as string,
+    contact_first_name: formData.get("contact_first_name") as string,
+    contact_last_name: formData.get("contact_last_name") as string,
+    company_name: formData.get("company_name") as string,
+    ...(avatarUrl && { avatar_url: avatarUrl }),
   }
+
+  console.log("Client form data:", clientForm)
 
   try {
     const token = await sdk.auth.register("client", "emailpass", {
@@ -115,11 +124,7 @@ export async function signupClient(_currentState: unknown, formData: FormData) {
 
     const createdClient = await sdk.client.fetch("/clients", {
       method: "POST",
-      body: {
-        client: {
-          ...clientForm,
-        }
-      },
+      body: { ...clientForm },
       headers
     })
 
@@ -129,7 +134,6 @@ export async function signupClient(_currentState: unknown, formData: FormData) {
     })
 
     await setAuthToken(loginToken as string)
-    sdk.client.setToken(loginToken as string)
 
     const clientCacheTag = await getCacheTag("clients")
     revalidateTag(clientCacheTag)
@@ -149,7 +153,6 @@ export async function loginClient(_currentState: unknown, formData: FormData) {
       .login("client", "emailpass", { email, password })
       .then(async (token) => {
         await setAuthToken(token as string)
-        sdk.client.setToken(token as string)
 
         const clientCacheTag = await getCacheTag("clients")
         revalidateTag(clientCacheTag)

@@ -19,6 +19,7 @@ export type Developer = {
   email: string
   first_name: string
   last_name: string
+  tech_stack?: string
   avatar_url?: string
   bugs?: Bug[]
   submissions?: Submission[]
@@ -112,6 +113,7 @@ export const retrieveDeveloperReviews =
 export const updateDeveloper = async (body: {
   first_name?: string
   last_name?: string
+  tech_stack?: string
   avatar_url?: string
 }) => {
   const token = await getAuthToken()
@@ -143,6 +145,7 @@ export async function signupDeveloper(_currentState: unknown, formData: FormData
     email: formData.get("email") as string,
     first_name: formData.get("first_name") as string,
     last_name: formData.get("last_name") as string,
+    tech_stack: formData.get("tech_stack") as string,
     ...(avatarUrl && { avatar_url: avatarUrl }),
   }
 

@@ -27,20 +27,22 @@ export const difficultyOptions = [
 ]
 
 export const CreateBug = ({ client, onCreate, isOpen: isOpenProp, onClose }: CreateBugProps) => {
-  const [internalOpen, setInternalOpen] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(isOpenProp ?? false)
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
 
   // If isOpen prop is provided, use it (controlled); otherwise use internal state
-  const isControlled = isOpenProp !== undefined
-  const open = isControlled ? isOpenProp : internalOpen
+  // const isControlled = isOpenProp !== undefined
+  // const open = isControlled ? isOpenProp : internalOpen
 
   const handleClose = () => {
     setPendingFiles([])
-    if (isControlled) {
-      onClose?.()
-    } else {
-      setInternalOpen(false)
-    }
+    setIsModalOpen(false)
+    onClose?.()
+    // if (isControlled) {
+    //   onClose?.()
+    // } else {
+    //   setInternalOpen(false)
+    // }
   }
 
   const form = useForm<CreateBugSchema>({
@@ -62,6 +64,7 @@ export const CreateBug = ({ client, onCreate, isOpen: isOpenProp, onClose }: Cre
   const { mutateAsync: createBug, isPending } = useCreateBug(client.id, {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bugs"] })
+      queryClient.invalidateQueries({ queryKey: ["client-me"] })
       toast.success("Bug created successfully")
       form.reset()
       setPendingFiles([])
@@ -100,12 +103,12 @@ export const CreateBug = ({ client, onCreate, isOpen: isOpenProp, onClose }: Cre
   return (
     <div>
       {/* Only show the trigger button when not externally controlled */}
-      {!isControlled && (
-        <Button variant="primary" onClick={() => setInternalOpen(true)}>
+      {/* {!isControlled && ( */}
+        <Button variant="primary" onClick={() => setIsModalOpen(true)}>
           Create Bug
         </Button>
-      )}
-      <Modal isOpen={open} close={handleClose}>
+      {/* )} */}
+      <Modal isOpen={isModalOpen} close={handleClose}>
         <Modal.Title>Create a New Bug</Modal.Title>
         <FormProvider {...form}>
           <form onSubmit={handleSubmit} className="flex h-full flex-col overflow-hidden">

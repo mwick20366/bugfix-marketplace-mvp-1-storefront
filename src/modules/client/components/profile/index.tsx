@@ -1,4 +1,4 @@
-// src/modules/developer/components/profile/index.tsx
+// src/modules/client/components/profile/index.tsx
 "use client"
 
 import { useState, useCallback } from "react"
@@ -10,21 +10,22 @@ import { useDropzone } from "react-dropzone"
 import { useUploadAvatar } from "@lib/hooks/use-upload-avatar"
 import { Developer, updateDeveloper } from "@lib/data/developer"
 import { useQueryClient } from "@tanstack/react-query"
+import { Client, updateClient } from "@lib/data/client"
 
 type Props = {
-  developer: Developer
+  client: Client
 }
 
 type ProfileFormValues = {
-  first_name: string
-  last_name: string
-  tech_stack?: string
+  contact_first_name: string
+  contact_last_name: string
+  company_name: string
 }
 
-export default function DeveloperProfile({ developer }: Props) {
+export default function ClientProfile({ client }: Props) {
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
-    developer.avatar_url || null
+    client.avatar_url || null
   )
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -34,9 +35,9 @@ export default function DeveloperProfile({ developer }: Props) {
 
   const form = useForm<ProfileFormValues>({
     defaultValues: {
-      first_name: developer.first_name || "",
-      last_name: developer.last_name || "",
-      tech_stack: developer.tech_stack || "",
+      contact_first_name: client.contact_first_name || "",
+      contact_last_name: client.contact_last_name || "",
+      company_name: client.company_name || "",
     },
   })
 
@@ -66,16 +67,16 @@ export default function DeveloperProfile({ developer }: Props) {
         avatarUrl = result.files?.[0]?.url
       }
 
-      // Step 2: Update developer profile
-      await updateDeveloper({
-        first_name: data.first_name,
-        last_name: data.last_name,
-        tech_stack: data.tech_stack,
+      // Step 2: Update client profile
+      await updateClient({
+        contact_first_name: data.contact_first_name,
+        contact_last_name: data.contact_last_name,
+        company_name: data.company_name,
         ...(avatarUrl && { avatar_url: avatarUrl }),
       })
 
       toast.success("Profile updated successfully")
-      queryClient.invalidateQueries({ queryKey: ["developer-me"] })
+      queryClient.invalidateQueries({ queryKey: ["client-me"] })
     } catch (e: any) {
       setError(e.message || "Failed to update profile.")
     } finally {
@@ -86,7 +87,9 @@ export default function DeveloperProfile({ developer }: Props) {
   return (
     <div className="max-w-sm flex flex-col gap-y-6">
       <h1 className="text-large-semi uppercase">My Profile</h1>
+
       <form className="w-full flex flex-col gap-y-4" onSubmit={handleSubmit}>
+
         {/* Avatar */}
         <div className="flex flex-col gap-y-2">
           <Label>Profile Avatar</Label>
@@ -129,20 +132,22 @@ export default function DeveloperProfile({ developer }: Props) {
         {/* Name Fields */}
         <Input
           label="First name"
-          {...form.register("first_name", { required: true })}
+          {...form.register("contact_first_name", { required: true })}
           autoComplete="given-name"
         />
         <Input
           label="Last name"
-          {...form.register("last_name", { required: true })}
+          {...form.register("contact_last_name", { required: true })}
           autoComplete="family-name"
         />
         <Input
-          label="Tech Stack"
-          {...form.register("tech_stack", { required: true })}
-          autoComplete="tech-stack"
+          label="Company name"
+          {...form.register("company_name", { required: true })}
+          autoComplete="organization"
         />
+
         <ErrorMessage error={error} />
+
         <Button
           type="submit"
           className="w-full mt-2"
