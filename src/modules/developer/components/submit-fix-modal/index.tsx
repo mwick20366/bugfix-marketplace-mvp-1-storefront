@@ -112,8 +112,8 @@ export default function SubmitFixModal({
             ) : (
               <>
                 <Heading level="h2">{bug?.title}</Heading>
-                <BugzapperText>{bug?.description}</BugzapperText>
-                <BugzapperText>Bounty: {bug?.bounty}</BugzapperText>
+                {/* <BugzapperText>{bug?.description}</BugzapperText> */}
+                <BugzapperText>Bounty: ${bug?.bounty ?? 0}</BugzapperText>
               </>
             )}
             <Controller

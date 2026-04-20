@@ -72,6 +72,7 @@ export const listBugs = async ({
     q?: string
     status?: string | string[]
     difficulty?: string | string[]
+    tech_stack?: string[]  // ← add this
   }
   sortBy?: SortOptions
 }): Promise<{
@@ -82,6 +83,7 @@ export const listBugs = async ({
     q?: string
     status?: string | string[]
     difficulty?: string | string[]
+    tech_stack?: string[]  // ← add this
   }
 }> => {
   const headers = {

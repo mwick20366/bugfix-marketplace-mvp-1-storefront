@@ -51,6 +51,7 @@ export default async function Page(props: Params) {
           <OpenBugs
             {...openBugsParams}
             isDeveloper={!!developer.id}
+            developerTechStack={developer.tech_stack || ""}
           />
         </div>
       </div>
