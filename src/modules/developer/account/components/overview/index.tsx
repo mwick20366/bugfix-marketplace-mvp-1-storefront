@@ -1,15 +1,9 @@
-import { Container } from "@medusajs/ui"
 
-import ChevronDown from "@modules/common/icons/chevron-down"
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
 import { Developer } from "@lib/data/developer"
 
 type OverviewProps = {
   developer: Developer | null
-  // customer: HttpTypes.StoreCustomer | null
-  // orders: HttpTypes.StoreOrder[] | null
 }
 
 const Overview = ({ developer }: OverviewProps) => {
@@ -18,7 +12,7 @@ const Overview = ({ developer }: OverviewProps) => {
       <div className="hidden small:block">
         <div className="text-xl-semi flex justify-between items-center mb-4">
           <span data-testid="welcome-message" data-value={developer?.first_name}>
-            Hello! {developer?.first_name ? developer.first_name : "there"}!
+            Hello {developer?.first_name ? developer.first_name : "there"}!
           </span>
           <span className="text-small-regular text-ui-fg-base">
             Signed in as:{" "}

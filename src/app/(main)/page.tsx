@@ -1,11 +1,23 @@
 // src/app/(main)/page.tsx
 import { getCountryCode } from "@lib/data/cookies"
+import { getActorType } from "@modules/common/functions/get-actor-type"
+import { redirect } from "next/navigation"
 
 export default async function Home() {
   const countryCode = await getCountryCode()
 
   if (!countryCode) {
     return null
+  }
+
+  const actorType = await getActorType();
+
+  if (actorType === "client") {
+    redirect("/client/account")
+  }
+
+  if (actorType === "developer") {
+    redirect("/developer/account")
   }
 
   return (

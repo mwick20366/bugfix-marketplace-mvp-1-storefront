@@ -1,7 +1,7 @@
 "use client"
 
 import { clx } from "@medusajs/ui"
-import { ArrowRightOnRectangle, BugAntSolid, PaperPlane, ChatBubbleLeftRight, BellAlert, User } from "@medusajs/icons"
+import { ArrowRightOnRectangle, BugAntSolid, PaperPlane, ChatBubbleLeftRight, BellAlert, House } from "@medusajs/icons"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
 
@@ -14,7 +14,7 @@ const ICON_SIZE = "w-6 h-6"
 
 const AccountNav = () => {
   const route = usePathname()
-  const [isOpen, setIsOpen] = useState(true)
+  const [isOpen, setIsOpen] = useState(false)
 
   const handleLogout = async () => {
     await signoutClient()
@@ -28,9 +28,9 @@ const AccountNav = () => {
   const navItems = [
     {
       href: "/client/account",
-      label: "Overview",
-      icon: <User className={ICON_SIZE} />,
-      testId: "overview-link",
+      label: "Home",
+      icon: <House className={ICON_SIZE} />,
+      testId: "home-link",
     },
     {
       href: "/client/account/my-bugs",
